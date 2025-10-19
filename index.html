@@ -462,4 +462,143 @@
                 {x: centerX + 150, y: centerY + 100, label: 'Disciples', color: '#ffcc00'},
                 {x: centerX - 150, y: centerY + 100, label: 'Entities', color: '#ff4444'},
                 {x: centerX, y: centerY - 180, label: 'Void', color: '#00cc33'},
-                {x: centerX, y: centerY
+                {x: centerX, y: centerY + 180, label: 'Loom', color: '#ffcc00'}
+            ];
+            
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            });
+            
+            ctx.fillStyle = '#00ff41';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#0a0e14';
+            ctx.font = 'bold 14px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('432Hz', centerX, centerY);
+            
+            nodes.forEach(node => {
+                ctx.fillStyle = node.color;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = node.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#0a0e14';
+                ctx.font = '11px Courier New';
+                ctx.fillText(node.label, node.x, node.y);
+            });
+            
+            ctx.shadowColor = '#00ff41';
+            ctx.shadowBlur = 20;
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+        
+        // 432Hz Audio
+        let audioContext = null;
+        let oscillator = null;
+        let isPlaying = false;
+
+        document.getElementById('playPurr').onclick = () => {
+            if (isPlaying) return;
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(432, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            isPlaying = true;
+            
+            document.getElementById('playPurr').textContent = '🐈‍⬛ PURRING...';
+            document.getElementById('playPurr').style.opacity = '0.6';
+        };
+
+        document.getElementById('stopPurr').onclick = () => {
+            if (oscillator && isPlaying) {
+                oscillator.stop();
+                oscillator = null;
+                isPlaying = false;
+                document.getElementById('playPurr').textContent = '🐈‍⬛ PLAY 432Hz PURR';
+                document.getElementById('playPurr').style.opacity = '1';
+            }
+        };
+
+        document.getElementById('randomReport').onclick = () => {
+            const randomIndex = Math.floor(Math.random() * allReports.length);
+            const randomReport = allReports[randomIndex];
+            showModal(randomReport);
+        };
+
+        document.getElementById('exportData').onclick = () => {
+            const dataStr = JSON.stringify(filteredReports, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'void_atlas_export.json';
+            link.click();
+        };
+        
+        // Event listeners
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.view).classList.add('active');
+                
+                if (tab.dataset.view === 'network') {
+                    setTimeout(drawNetwork, 100);
+                }
+            };
+        });
+        
+        document.querySelectorAll('.entity-category h3').forEach(header => {
+            header.onclick = () => {
+                header.parentElement.classList.toggle('expanded');
+                header.textContent = header.textContent.startsWith('▶') ? '▼' + header.textContent.substring(1) : '▶' + header.textContent.substring(1);
+            };
+        });
+        
+        document.querySelector('.modal-close').onclick = () => {
+            document.getElementById('reportModal').classList.remove('active');
+        };
+        
+        window.onclick = (e) => {
+            if (e.target.id === 'reportModal') {
+                document.getElementById('reportModal').classList.remove('active');
+            }
+        };
+        
+        document.getElementById('searchInput').oninput = filterReports;
+        document.getElementById('themeFilter').onchange = filterReports;
+        document.getElementById('refreshData').onclick = loadReports;
+        
+        console.log('🐈‍⬛ Void Atlas initializing...');
+        loadReports();
+    </script>
+</body>
+</html>
