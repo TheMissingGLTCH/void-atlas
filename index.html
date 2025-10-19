@@ -986,18 +986,6 @@ The ExtraBucks I earn are valid in currencies that won't exist for another thous
 
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
-            
-            // Load local reports first
-            try {
-                const localResponse = await fetch('local-reports.json');
-                if (localResponse.ok) {
-                    localReportData = await localResponse.json();
-                    console.log(`✅ Loaded ${Object.keys(localReportData).length} local reports`);
-                }
-            } catch (e) {
-                console.log('No local reports file found, will try external sources');
-            }
-            
             await loadReports();
             setupEventListeners();
             drawNetwork();
