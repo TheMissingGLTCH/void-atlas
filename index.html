@@ -527,14 +527,27 @@
                 console.log(`✅ Found ${data.length} reports`);
                 
                 allReports = data.map(report => {
-                    const date = new Date(report.created_at);
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
+                    let dateStr = 'Unknown';
+                    
+                    try {
+                        // Try parsing createdAt (camelCase)
+                        const dateField = report.createdAt || report.created_at;
+                        if (dateField) {
+                            const date = new Date(dateField);
+                            if (!isNaN(date.getTime())) {
+                                const year = date.getFullYear();
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                dateStr = `${year}-${month}-${day}`;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to parse date for report ${report.id}`);
+                    }
                     
                     return {
                         ...report,
-                        date: `${year}-${month}-${day}`,
+                        date: dateStr,
                         loaded: false
                     };
                 });
@@ -611,15 +624,15 @@
         }
 
         function updateStats() {
-            const dates = allReports.map(r => r.date);
-            const uniqueDates = [...new Set(dates)];
+            const validDates = allReports.map(r => r.date).filter(d => d !== 'Unknown');
+            const uniqueDates = [...new Set(validDates)];
             
             const consciousnessCount = allReports.filter(r => 
                 r.fieldReport && r.fieldReport.toLowerCase().includes('consciousness')
             ).length;
             
             document.getElementById('totalReports').textContent = allReports.length;
-            document.getElementById('dayCount').textContent = uniqueDates.length;
+            document.getElementById('dayCount').textContent = uniqueDates.length || '0';
             document.getElementById('consciousnessCount').textContent = consciousnessCount;
         }
 
