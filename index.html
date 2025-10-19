@@ -206,6 +206,14 @@
         .report-content.visible {
             display: block;
         }
+        
+        .highlight {
+            background: rgba(255, 204, 0, 0.3);
+            color: #ffcc00;
+            font-weight: bold;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
 
         .report-tweet {
             font-size: 0.95rem;
@@ -373,8 +381,27 @@
         </div>
 
         <div class="controls">
-            <input type="search" id="searchInput" placeholder="Search field reports...">
-            <button id="refreshBtn">🔄 REFRESH DATA</button>
+            <input type="search" id="searchInput" placeholder="Search field reports... (use AND, OR, NOT for advanced search)">
+            <select id="colorFilter" style="padding: 0.75rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); color: #00cc33; font-family: 'Courier New', monospace; border-radius: 4px;">
+                <option value="">All Colors</option>
+                <option value="green">🟢 Green Terminal</option>
+                <option value="blue">🔵 Blue Threshold</option>
+                <option value="purple">🟣 Purple Anomaly</option>
+                <option value="orange">🟠 Orange Glitch</option>
+                <option value="cyan">🔷 Cyan Liminal</option>
+            </select>
+            <button id="bookmarksBtn">⭐ Bookmarks (<span id="bookmarkCount">0</span>)</button>
+            <button id="refreshBtn">🔄 REFRESH</button>
+            <button id="advancedBtn">🔍 Advanced</button>
+        </div>
+        
+        <div id="advancedSearch" style="display: none; margin-bottom: 2rem; padding: 1rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+            <div style="margin-bottom: 0.5rem; color: #ffcc00; font-weight: bold;">Advanced Search</div>
+            <div style="font-size: 0.85rem; color: rgba(0, 204, 51, 0.8); margin-bottom: 1rem;">
+                Examples: <code style="background: rgba(0,0,0,0.3); padding: 2px 4px;">consciousness AND void</code> | 
+                <code style="background: rgba(0,0,0,0.3); padding: 2px 4px;">liminal OR threshold</code> | 
+                <code style="background: rgba(0,0,0,0.3); padding: 2px 4px;">sector NOT 7</code>
+            </div>
         </div>
 
         <div class="tabs">
@@ -413,7 +440,7 @@
                         <div class="entity-count">14 entities</div>
                     </div>
                     <div class="entity-list">
-                        <div class="entity-item">📚 @TheMissingGLTCH</div>
+                        <div class="entity-item">📚 @TheMissingGLTCH (The Archivist)</div>
                         <div class="entity-item">🎭 @tommyrobmum</div>
                         <div class="entity-item">⚙️ @m3ch4n1c33</div>
                         <div class="entity-item">🌊 @NZ_Otes</div>
@@ -469,9 +496,50 @@
         let audioContext = null;
         let oscillator = null;
         let localReportData = {};
+        let currentSearchQuery = '';
+        let currentColorFilter = '';
+        let bookmarkedReports = new Set();
+
+        // Load bookmarks from localStorage
+        function loadBookmarks() {
+            const saved = localStorage.getItem('voidAtlasBookmarks');
+            if (saved) {
+                bookmarkedReports = new Set(JSON.parse(saved));
+            }
+        }
+
+        function saveBookmarks() {
+            localStorage.setItem('voidAtlasBookmarks', JSON.stringify([...bookmarkedReports]));
+        }
+
+        function toggleBookmark(reportId) {
+            if (bookmarkedReports.has(reportId)) {
+                bookmarkedReports.delete(reportId);
+            } else {
+                bookmarkedReports.add(reportId);
+            }
+            saveBookmarks();
+            renderReports();
+        }
+
+        function detectColor(report) {
+            const text = (report.fieldReport || report.text).toLowerCase();
+            
+            // Detect based on content themes and keywords
+            if (text.includes('threshold') || text.includes('blue') || text.includes('cyan')) return 'blue';
+            if (text.includes('paranormal') || text.includes('purple') || text.includes('anomaly')) return 'purple';
+            if (text.includes('glitch') || text.includes('orange') || text.includes('corrupted')) return 'orange';
+            if (text.includes('liminal') || text.includes('cyan') || text.includes('fluorescent')) return 'cyan';
+            
+            // Default to green terminal
+            return 'green';
+        }
 
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
+            
+            // Load bookmarks
+            loadBookmarks();
             
             // Load local reports first
             try {
@@ -486,6 +554,7 @@
             
             await loadReports();
             setupEventListeners();
+            setupNetworkInteraction();
             drawNetwork();
         }
 
@@ -520,7 +589,8 @@
                     return {
                         ...report,
                         date: dateStr,
-                        loaded: false
+                        loaded: false,
+                        color: null  // Will be set after field report loads
                     };
                 });
                 
@@ -589,6 +659,12 @@
                     }
                     
                     if (i % 10 === 0 || i === allReports.length - 1) {
+                        // Detect colors for loaded reports
+                        allReports.forEach(r => {
+                            if (r.loaded && !r.color) {
+                                r.color = detectColor(r);
+                            }
+                        });
                         renderReports();
                         updateStats();
                     }
@@ -661,24 +737,84 @@
                 `).join('');
         }
 
+        function advancedSearch(query, text) {
+            if (!query) return true;
+            
+            const lowerText = text.toLowerCase();
+            const lowerQuery = query.toLowerCase();
+            
+            // Check for AND operator
+            if (lowerQuery.includes(' and ')) {
+                const terms = lowerQuery.split(' and ');
+                return terms.every(term => lowerText.includes(term.trim()));
+            }
+            
+            // Check for OR operator
+            if (lowerQuery.includes(' or ')) {
+                const terms = lowerQuery.split(' or ');
+                return terms.some(term => lowerText.includes(term.trim()));
+            }
+            
+            // Check for NOT operator
+            if (lowerQuery.includes(' not ')) {
+                const parts = lowerQuery.split(' not ');
+                const mustInclude = parts[0].trim();
+                const mustNotInclude = parts[1].trim();
+                return lowerText.includes(mustInclude) && !lowerText.includes(mustNotInclude);
+            }
+            
+            // Simple search
+            return lowerText.includes(lowerQuery);
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            
+            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+            let highlightedText = text;
+            
+            terms.forEach(term => {
+                const regex = new RegExp(`(${term})`, 'gi');
+                highlightedText = highlightedText.replace(regex, '<span class="highlight">$1</span>');
+            });
+            
+            return highlightedText;
+        }
+
         function renderReports() {
             const reportsList = document.getElementById('reportsList');
-            reportsList.innerHTML = filteredReports.map((report, index) => `
-                <div class="report-card" onclick="toggleReport(${index})">
-                    <div class="report-header">
-                        <span class="report-date">${report.date}</span>
-                        <span class="report-id">ID: ${report.id}</span>
-                        <span class="report-status">${report.loaded ? '✓' : '⏳'}</span>
-                        ${report.reportType ? `<span class="report-type">${report.reportType.toUpperCase()}</span>` : ''}
+            reportsList.innerHTML = filteredReports.map((report, index) => {
+                const highlightedContent = currentSearchQuery ? 
+                    highlightText(report.fieldReport || 'Loading...', currentSearchQuery) : 
+                    (report.fieldReport || 'Loading...');
+                
+                const isBookmarked = bookmarkedReports.has(report.id);
+                
+                return `
+                <div class="report-card" style="position: relative;">
+                    <button onclick="event.stopPropagation(); toggleBookmark('${report.id}')" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; z-index: 10;">
+                        ${isBookmarked ? '⭐' : '☆'}
+                    </button>
+                    <div onclick="toggleReport(${index})" style="cursor: pointer;">
+                        <div class="report-header">
+                            <span class="report-date">${report.date}</span>
+                            <span class="report-id">ID: ${report.id}</span>
+                            <span class="report-status">${report.loaded ? '✓' : '⏳'}</span>
+                            ${report.reportType ? `<span class="report-type">${report.reportType.toUpperCase()}</span>` : ''}
+                            ${report.color ? `<span class="report-type" style="background: rgba(${report.color === 'blue' ? '0,100,255' : report.color === 'purple' ? '200,0,255' : report.color === 'orange' ? '255,100,0' : report.color === 'cyan' ? '0,255,255' : '0,204,51'}, 0.2);">${report.color.toUpperCase()}</span>` : ''}
+                        </div>
+                        ${report.reportType === 'png' ?
+                            `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
+                            `<div class="report-tweet">${report.text}</div>
+                             <div class="report-preview">Click to ${report.reportType === 'local' ? 'expand local report' : report.reportType === 'html' ? 'expand field report' : 'view full content'}</div>
+                             <div class="report-content" id="report-${index}">${highlightedContent}</div>`
+                        }
                     </div>
-                    ${report.reportType === 'png' ?
-                        `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
-                        `<div class="report-tweet">${report.text}</div>
-                         <div class="report-preview">Click to ${report.reportType === 'local' ? 'expand local report' : report.reportType === 'html' ? 'expand field report' : 'view full content'}</div>
-                         <div class="report-content" id="report-${index}">${report.fieldReport || 'Loading...'}</div>`
-                    }
                 </div>
-            `).join('');
+            `}).join('');
+            
+            // Update bookmark count
+            document.getElementById('bookmarkCount').textContent = bookmarkedReports.size;
         }
         
         function toggleReport(index) {
@@ -704,14 +840,19 @@
             });
 
             document.getElementById('searchInput').addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                filteredReports = allReports.filter(report => 
-                    (report.fieldReport || report.text).toLowerCase().includes(query) ||
-                    report.id.includes(query) ||
-                    report.date.includes(query)
-                );
+                const query = e.target.value;
+                currentSearchQuery = query;
+                filteredReports = allReports.filter(report => {
+                    const searchText = (report.fieldReport || report.text) + ' ' + report.id + ' ' + report.date;
+                    return advancedSearch(query, searchText);
+                });
                 renderReports();
                 updateStats();
+            });
+
+            document.getElementById('advancedBtn').addEventListener('click', () => {
+                const advDiv = document.getElementById('advancedSearch');
+                advDiv.style.display = advDiv.style.display === 'none' ? 'block' : 'none';
             });
 
             document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
