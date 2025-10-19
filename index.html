@@ -556,8 +556,10 @@
                 // Load individual field reports (HTML or PNG)
                 for (let i = 0; i < allReports.length; i++) {
                     const report = allReports[i];
+                    let loaded = false;
+                    
+                    // Try HTML first
                     try {
-                        // Try HTML first
                         const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
                         const htmlResponse = await fetch(htmlUrl);
                         
@@ -572,8 +574,15 @@
                             report.fieldReport = reportText;
                             report.reportType = 'html';
                             report.loaded = true;
-                        } else {
-                            // If HTML fails, try PNG
+                            loaded = true;
+                        }
+                    } catch (error) {
+                        // HTML fetch failed, will try PNG next
+                    }
+                    
+                    // If HTML didn't work, try PNG
+                    if (!loaded) {
+                        try {
                             const pngUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.png`;
                             const pngResponse = await fetch(pngUrl);
                             
@@ -583,13 +592,17 @@
                                 report.reportType = 'png';
                                 report.imageUrl = pngUrl;
                                 report.loaded = true;
-                            } else {
-                                throw new Error('Neither HTML nor PNG found');
+                                loaded = true;
                             }
+                        } catch (error) {
+                            // PNG fetch failed too
                         }
-                    } catch (error) {
-                        console.warn(`❌ Failed to load report ${report.id}:`, error.message);
-                        report.fieldReport = `[Field report file not found - using tweet preview]\n\n${report.text}`;
+                    }
+                    
+                    // If neither worked, use tweet fallback
+                    if (!loaded) {
+                        console.warn(`⚠️ No HTML or PNG found for report ${report.id}, using tweet`);
+                        report.fieldReport = `${report.text}`;
                         report.loaded = true;
                         report.loadError = true;
                         report.reportType = 'tweet';
