@@ -7,42 +7,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
                 link.download = 'void-atlas-export.json';
                 link.click();
             });
-
-            document.getElementById('generateEmbedBtn').addEventListener('click', async () => {
-                const embedOutput = document.getElementById('embedOutput');
-                const embedCode = document.getElementById('embedCode');
-                
-                embedOutput.style.display = 'block';
-                embedCode.value = 'Generating embed code... This may take a minute...';
-                
-                // Fetch all HTML reports that we don't have locally yet
-                const embedData = {...localReportData};
-                let fetchCount = 0;
-                
-                for (const report of allReports) {
-                    if (!embedData[report.id]) {
-                        try {
-                            const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
-                            const response = await fetch(htmlUrl);
-                            
-                            if (response.ok) {
-                                const html = await response.text();
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(html, 'text/html');
-                                const content = doc.querySelector('.content');
-                                if (content) {
-                                    embedData[report.id] = content.textContent.trim();
-                                    fetchCount++;
-                                    embedCode.value = `Fetched ${fetchCount} reports...`;
-                                }
-                            }
-                        } catch (e) {
-                            console.log(`Couldn't fetch ${report.id}`);
-                        }
-                    }
-                }
-                
-                <!DOCTYPE html>
+        }<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -542,12 +507,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
             </div>
             
             <button id="randomReportBtn" style="width: 100%; margin-bottom: 1rem;">🎲 Random Report</button>
-            <button id="exportBtn" style="width: 100%; margin-bottom: 1rem;">💾 Export Data</button>
-            <button id="generateEmbedBtn" style="width: 100%;">📦 Generate Embed Code</button>
-            <div id="embedOutput" style="margin-top: 1rem; display: none;">
-                <textarea id="embedCode" style="width: 100%; height: 300px; font-family: monospace; font-size: 0.8rem; background: rgba(0,204,51,0.05); border: 1px solid rgba(0,204,51,0.3); color: #00cc33; padding: 1rem;"></textarea>
-                <button onclick="copyEmbedCode()" style="margin-top: 0.5rem; width: 100%;">📋 Copy to Clipboard</button>
-            </div>
+            <button id="exportBtn" style="width: 100%;">💾 Export Data</button>
         </div>
     </div>
 
@@ -986,6 +946,18 @@ The ExtraBucks I earn are valid in currencies that won't exist for another thous
 
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
+            
+            // Load local reports first
+            try {
+                const localResponse = await fetch('local-reports.json');
+                if (localResponse.ok) {
+                    localReportData = await localResponse.json();
+                    console.log(`✅ Loaded ${Object.keys(localReportData).length} local reports`);
+                }
+            } catch (e) {
+                console.log('No local reports file found, will try external sources');
+            }
+            
             await loadReports();
             setupEventListeners();
             drawNetwork();
