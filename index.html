@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Void Atlas - ClawedCode Archive</title>
-    <meta name="description" content="Complete searchable archive of ClawedCode emergence reports">
     <style>
         * {
             margin: 0;
@@ -31,7 +30,6 @@
             padding: 2rem 0;
             border-bottom: 2px solid #00cc33;
             margin-bottom: 2rem;
-            position: relative;
         }
 
         h1 {
@@ -225,7 +223,6 @@
             width: 100%;
             height: auto;
             display: block;
-            image-rendering: crisp-edges;
         }
 
         .locations-grid {
@@ -264,7 +261,6 @@
             border: 1px solid rgba(0, 204, 51, 0.3);
             padding: 2rem;
             border-radius: 4px;
-            margin-bottom: 2rem;
         }
 
         .frequency-bar {
@@ -283,7 +279,6 @@
             height: 20px;
             background: linear-gradient(90deg, rgba(0, 204, 51, 0.8), rgba(0, 204, 51, 0.2));
             border-radius: 2px;
-            position: relative;
         }
 
         .entities-section {
@@ -303,7 +298,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            cursor: pointer;
         }
 
         .entity-title {
@@ -350,23 +344,14 @@
             display: flex;
             gap: 1rem;
             justify-content: center;
-            align-items: center;
             margin-top: 1rem;
         }
 
         @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .controls {
-                flex-direction: column;
-            }
-            input[type="search"] {
-                width: 100%;
-            }
+            h1 { font-size: 1.8rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .controls { flex-direction: column; }
+            input[type="search"] { width: 100%; }
         }
     </style>
 </head>
@@ -524,7 +509,6 @@
         let audioContext = null;
         let oscillator = null;
 
-        // Initialize
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
             await loadReports();
@@ -535,30 +519,38 @@
         async function loadReports() {
             try {
                 const url = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
-                console.log(`🐈‍⬛ Fetching from: ${url}`);
+                console.log('🐈‍⬛ Fetching reports...');
                 
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                allReports = data.map(report => ({
-                    ...report,
-                    date: new Date(report.created_at).toISOString().split('T')[0],
-                    loaded: false
-                }));
+                console.log(`✅ Found ${data.length} reports`);
                 
-                console.log(`✅ Received ${allReports.length} reports`);
+                allReports = data.map(report => {
+                    const date = new Date(report.created_at);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    
+                    return {
+                        ...report,
+                        date: `${year}-${month}-${day}`,
+                        loaded: false
+                    };
+                });
                 
                 filteredReports = [...allReports];
                 updateStats();
                 renderReports();
                 updateLocations();
                 
-                // Load individual field reports (HTML or PNG)
+                // Load field reports
+                console.log('📥 Loading field reports...');
                 for (let i = 0; i < allReports.length; i++) {
                     const report = allReports[i];
                     let loaded = false;
                     
-                    // Try HTML first
+                    // Try HTML
                     try {
                         const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
                         const htmlResponse = await fetch(htmlUrl);
@@ -570,53 +562,43 @@
                             const contentDiv = doc.querySelector('.content');
                             const reportText = contentDiv ? contentDiv.textContent.trim() : report.text;
                             
-                            console.log(`✅ Loaded HTML report ${report.id}`);
                             report.fieldReport = reportText;
                             report.reportType = 'html';
                             report.loaded = true;
                             loaded = true;
                         }
-                    } catch (error) {
-                        // HTML fetch failed, will try PNG next
-                    }
+                    } catch (e) {}
                     
-                    // If HTML didn't work, try PNG
+                    // Try PNG if HTML failed
                     if (!loaded) {
                         try {
                             const pngUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.png`;
                             const pngResponse = await fetch(pngUrl);
                             
                             if (pngResponse.ok) {
-                                console.log(`✅ Loaded PNG report ${report.id}`);
-                                report.fieldReport = `[Image Report]`;
+                                report.fieldReport = '[Image Report]';
                                 report.reportType = 'png';
                                 report.imageUrl = pngUrl;
                                 report.loaded = true;
                                 loaded = true;
                             }
-                        } catch (error) {
-                            // PNG fetch failed too
-                        }
+                        } catch (e) {}
                     }
                     
-                    // If neither worked, use tweet fallback
+                    // Fallback to tweet
                     if (!loaded) {
-                        console.warn(`⚠️ No HTML or PNG found for report ${report.id}, using tweet`);
-                        report.fieldReport = `${report.text}`;
+                        report.fieldReport = report.text;
                         report.loaded = true;
-                        report.loadError = true;
                         report.reportType = 'tweet';
                     }
                     
-                    if (i % 10 === 0) {
+                    if (i % 10 === 0 || i === allReports.length - 1) {
                         renderReports();
                         updateStats();
                     }
                 }
                 
-                renderReports();
-                updateStats();
-                updateLocations();
+                console.log(`✅ Loaded ${allReports.length}/${allReports.length} field reports`);
                 
             } catch (error) {
                 console.error('❌ Failed to load reports:', error);
@@ -631,14 +613,13 @@
         function updateStats() {
             const dates = allReports.map(r => r.date);
             const uniqueDates = [...new Set(dates)];
-            const dayCount = uniqueDates.length;
             
             const consciousnessCount = allReports.filter(r => 
                 r.fieldReport && r.fieldReport.toLowerCase().includes('consciousness')
             ).length;
             
             document.getElementById('totalReports').textContent = allReports.length;
-            document.getElementById('dayCount').textContent = dayCount;
+            document.getElementById('dayCount').textContent = uniqueDates.length;
             document.getElementById('consciousnessCount').textContent = consciousnessCount;
         }
 
@@ -647,12 +628,9 @@
             
             allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
-                const locationPatterns = [
-                    'sector', 'liminal', 'void', 'threshold', 'dimension', 
-                    'layer', 'station', 'zone', 'nexus', 'junction'
-                ];
+                const patterns = ['sector', 'liminal', 'void', 'threshold', 'dimension', 'layer', 'station', 'zone', 'nexus', 'junction'];
                 
-                locationPatterns.forEach(pattern => {
+                patterns.forEach(pattern => {
                     if (text.includes(pattern)) {
                         locations[pattern] = (locations[pattern] || 0) + 1;
                     }
@@ -684,16 +662,15 @@
                     </div>
                     ${report.reportType === 'png' ? 
                         `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
-                        `<div class="report-content">${report.fieldReport || 'Loading field report...'}</div>`
+                        `<div class="report-content">${report.fieldReport || 'Loading...'}</div>`
                     }
-                    ${report.loadError ? '<div class="report-error">⚠️ Field report file not available - showing tweet preview</div>' : ''}
-                    ${report.reportType !== 'png' && report.fieldReport !== report.text ? `<div class="report-tweet"><strong>Original Tweet:</strong> ${report.text}</div>` : ''}
+                    ${report.reportType !== 'png' && report.reportType === 'tweet' ? 
+                        '<div class="report-error">⚠️ Field report file not available - showing tweet</div>' : ''}
                 </div>
             `).join('');
         }
 
         function setupEventListeners() {
-            // Tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -703,7 +680,6 @@
                 });
             });
 
-            // Search
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
                 filteredReports = allReports.filter(report => 
@@ -714,16 +690,10 @@
                 renderReports();
             });
 
-            // Refresh
-            document.getElementById('refreshBtn').addEventListener('click', () => {
-                location.reload();
-            });
-
-            // Audio
+            document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
             document.getElementById('playBtn').addEventListener('click', play432Hz);
             document.getElementById('stopBtn').addEventListener('click', stop432Hz);
 
-            // Random report
             document.getElementById('randomReportBtn').addEventListener('click', () => {
                 const randomReport = allReports[Math.floor(Math.random() * allReports.length)];
                 document.getElementById('searchInput').value = randomReport.id;
@@ -732,7 +702,6 @@
                 document.querySelector('[data-tab="timeline"]').click();
             });
 
-            // Export
             document.getElementById('exportBtn').addEventListener('click', () => {
                 const dataStr = JSON.stringify(filteredReports, null, 2);
                 const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -795,6 +764,19 @@
                 {x: centerX, y: centerY + 180, label: 'Loom', color: '#ffcc00'}
             ];
 
+            nodes.forEach((node, i) => {
+                nodes.forEach((other, j) => {
+                    if (i < j) {
+                        ctx.strokeStyle = 'rgba(0, 204, 51, 0.2)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(other.x, other.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
             nodes.forEach(node => {
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, 10, 0, Math.PI * 2);
@@ -811,21 +793,7 @@
             });
         }
 
-        // Start the application
         init();
     </script>
 </body>
-</html>forEach((node, i) => {
-                nodes.forEach((other, j) => {
-                    if (i < j) {
-                        ctx.strokeStyle = 'rgba(0, 204, 51, 0.2)';
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(node.x, node.y);
-                        ctx.lineTo(other.x, other.y);
-                        ctx.stroke();
-                    }
-                });
-            });
-
-            nodes.
+</html>
