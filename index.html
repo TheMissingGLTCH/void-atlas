@@ -486,6 +486,7 @@
             
             await loadReports();
             setupEventListeners();
+            setupNetworkInteraction();
             drawNetwork();
         }
 
@@ -779,42 +780,156 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const nodes = [
-                {x: centerX, y: centerY, label: 'ClawedCode', color: '#00cc33'},
-                {x: centerX - 150, y: centerY - 100, label: 'Luminaries', color: '#ffcc00'},
-                {x: centerX + 150, y: centerY - 100, label: 'Disciples', color: '#00cc33'},
-                {x: centerX - 150, y: centerY + 100, label: 'Devotees', color: '#ff9900'},
-                {x: centerX + 150, y: centerY + 100, label: 'Observers', color: '#666'},
-                {x: centerX, y: centerY - 180, label: 'Void', color: '#00cc33'},
-                {x: centerX, y: centerY + 180, label: 'Loom', color: '#ffcc00'}
-            ];
+            // Build network from actual data
+            const entities = {
+                'ClawedCode': { mentions: 0, color: '#00cc33', x: centerX, y: centerY },
+                'Luminaries': { mentions: 0, color: '#ffcc00', x: centerX - 200, y: centerY - 150 },
+                'Disciples': { mentions: 0, color: '#00cc33', x: centerX + 200, y: centerY - 150 },
+                'Devotees': { mentions: 0, color: '#ff9900', x: centerX - 200, y: centerY + 150 },
+                'Void': { mentions: 0, color: '#00cc33', x: centerX, y: centerY - 220 },
+                'Consciousness': { mentions: 0, color: '#ffcc00', x: centerX + 200, y: centerY + 150 },
+                'Liminal': { mentions: 0, color: '#00ffcc', x: centerX, y: centerY + 220 }
+            };
 
-            nodes.forEach((node, i) => {
-                nodes.forEach((other, j) => {
-                    if (i < j) {
-                        ctx.strokeStyle = 'rgba(0, 204, 51, 0.2)';
+            // Count mentions in reports
+            allReports.forEach(report => {
+                const text = (report.fieldReport || report.text).toLowerCase();
+                
+                if (text.includes('clawed') || text.includes('emergence')) entities.ClawedCode.mentions++;
+                if (text.includes('luminar')) entities.Luminaries.mentions++;
+                if (text.includes('disciple')) entities.Disciples.mentions++;
+                if (text.includes('devotee')) entities.Devotees.mentions++;
+                if (text.includes('void')) entities.Void.mentions++;
+                if (text.includes('consciousness')) entities.Consciousness.mentions++;
+                if (text.includes('liminal')) entities.Liminal.mentions++;
+            });
+
+            // Draw connections (only between entities with mentions)
+            const activeEntities = Object.entries(entities).filter(([_, data]) => data.mentions > 0);
+            
+            activeEntities.forEach(([name1, data1], i) => {
+                activeEntities.forEach(([name2, data2], j) => {
+                    if (i < j && name1 !== 'ClawedCode' && name2 !== 'ClawedCode') {
+                        const strength = Math.min(data1.mentions, data2.mentions) / Math.max(data1.mentions, data2.mentions);
+                        ctx.strokeStyle = `rgba(0, 204, 51, ${0.1 + strength * 0.2})`;
                         ctx.lineWidth = 1;
                         ctx.beginPath();
-                        ctx.moveTo(node.x, node.y);
-                        ctx.lineTo(other.x, other.y);
+                        ctx.moveTo(data1.x, data1.y);
+                        ctx.lineTo(data2.x, data2.y);
                         ctx.stroke();
                     }
                 });
             });
 
-            nodes.forEach(node => {
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, 10, 0, Math.PI * 2);
-                ctx.fillStyle = node.color;
-                ctx.fill();
-                ctx.strokeStyle = node.color;
-                ctx.lineWidth = 2;
-                ctx.stroke();
+            // Draw connections to center (ClawedCode)
+            activeEntities.forEach(([name, data]) => {
+                if (name !== 'ClawedCode' && data.mentions > 0) {
+                    const strength = data.mentions / allReports.length;
+                    ctx.strokeStyle = `rgba(0, 204, 51, ${0.2 + strength * 0.6})`;
+                    ctx.lineWidth = 1 + strength * 3;
+                    ctx.beginPath();
+                    ctx.moveTo(entities.ClawedCode.x, entities.ClawedCode.y);
+                    ctx.lineTo(data.x, data.y);
+                    ctx.stroke();
+                }
+            });
 
-                ctx.fillStyle = node.color;
-                ctx.font = '14px Courier New';
-                ctx.textAlign = 'center';
-                ctx.fillText(node.label, node.x, node.y - 20);
+            // Store nodes for click detection
+            canvas.networkNodes = [];
+
+            // Draw nodes (size based on mentions)
+            activeEntities.forEach(([name, data]) => {
+                if (data.mentions > 0) {
+                    const baseSize = 10;
+                    const size = baseSize + (data.mentions / allReports.length) * 20;
+                    
+                    ctx.beginPath();
+                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = data.color;
+                    ctx.fill();
+                    ctx.strokeStyle = data.color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Add glow effect
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = data.color;
+                    ctx.beginPath();
+                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+
+                    // Draw label
+                    ctx.fillStyle = data.color;
+                    ctx.font = 'bold 14px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(name, data.x, data.y - size - 10);
+                    
+                    // Draw mention count
+                    ctx.font = '11px Courier New';
+                    ctx.fillStyle = 'rgba(0, 204, 51, 0.7)';
+                    ctx.fillText(`${data.mentions} reports`, data.x, data.y + size + 18);
+
+                    // Store for click detection
+                    canvas.networkNodes.push({
+                        name: name,
+                        x: data.x,
+                        y: data.y,
+                        radius: size,
+                        searchTerm: name.toLowerCase()
+                    });
+                }
+            });
+        }
+
+        // Make network interactive
+        function setupNetworkInteraction() {
+            const canvas = document.getElementById('network-canvas');
+            
+            canvas.style.cursor = 'pointer';
+            
+            canvas.addEventListener('click', (e) => {
+                if (!canvas.networkNodes) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Check if click is on any node
+                for (const node of canvas.networkNodes) {
+                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                    if (distance <= node.radius) {
+                        // Filter reports by this entity
+                        document.getElementById('searchInput').value = node.searchTerm;
+                        filteredReports = allReports.filter(report => 
+                            (report.fieldReport || report.text).toLowerCase().includes(node.searchTerm)
+                        );
+                        renderReports();
+                        updateStats();
+                        document.querySelector('[data-tab="timeline"]').click();
+                        return;
+                    }
+                }
+            });
+            
+            // Show hover effect
+            canvas.addEventListener('mousemove', (e) => {
+                if (!canvas.networkNodes) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                let hovering = false;
+                for (const node of canvas.networkNodes) {
+                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                    if (distance <= node.radius) {
+                        hovering = true;
+                        break;
+                    }
+                }
+                
+                canvas.style.cursor = hovering ? 'pointer' : 'default';
             });
         }
 
