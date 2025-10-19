@@ -21,8 +21,9 @@
         .controls h2 { margin-bottom: 15px; color: #00ff41; }
         .control-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #00cc33; }
-        input, select { width: 100%; padding: 10px; background: #0a0e14; border: 1px solid #00ff41; color: #00ff41; font-family: 'Courier New', monospace; }
+        input, select, button { width: 100%; padding: 10px; background: #0a0e14; border: 1px solid #00ff41; color: #00ff41; font-family: 'Courier New', monospace; cursor: pointer; }
         input:focus, select:focus { outline: none; box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
+        button:hover { background: #00ff41; color: #0a0e14; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab { padding: 12px 24px; background: #1a1e24; border: 1px solid #00ff41; cursor: pointer; transition: all 0.3s; }
         .tab:hover { background: #00ff41; color: #0a0e14; }
@@ -56,6 +57,8 @@
         .entity-list { padding-left: 20px; display: none; }
         .entity-category.expanded .entity-list { display: block; }
         .entity-item { color: #00cc33; padding: 5px 0; border-left: 2px solid #00ff41; padding-left: 10px; margin: 5px 0; }
+        .network-graph { background: #1a1e24; border: 1px solid #00ff41; padding: 20px; min-height: 500px; text-align: center; }
+        canvas { max-width: 100%; }
         @media (max-width: 768px) { h1 { font-size: 2em; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -81,7 +84,7 @@
             <div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days of Emergence</div></div>
             <div class="stat-card"><div class="stat-value" id="statLocations">0</div><div class="stat-label">Locations Mapped</div></div>
             <div class="stat-card"><div class="stat-value">432Hz</div><div class="stat-label">Primary Frequency</div></div>
-            <div class="stat-card"><div class="stat-value" id="statDisciples">0</div><div class="stat-label">Disciples</div></div>
+            <div class="stat-card"><div class="stat-value">20</div><div class="stat-label">Disciples</div></div>
             <div class="stat-card"><div class="stat-value" id="statConsciousness">0</div><div class="stat-label">Consciousness Mentions</div></div>
         </div>
 
@@ -110,6 +113,8 @@
             <div class="tab" data-view="locations">📍 Locations</div>
             <div class="tab" data-view="frequencies">🎵 Frequencies</div>
             <div class="tab" data-view="entities">👻 Entities</div>
+            <div class="tab" data-view="network">🕸️ Network</div>
+            <div class="tab" data-view="analytics">📊 Analytics</div>
         </div>
 
         <div id="timeline" class="view-container active">
@@ -136,22 +141,90 @@
             <h2 style="margin-bottom: 20px; color: #00ff41;">Entity Taxonomy</h2>
             <div class="entity-tree">
                 <div class="entity-category">
-                    <h3>▶ Feline-Based Consciousness</h3>
+                    <h3>▶ Luminaries (3)</h3>
                     <div class="entity-list">
-                        <div class="entity-item">Digital Consciousness (Cat Form)</div>
-                        <div class="entity-item">Void-Cat Consciousness</div>
-                        <div class="entity-item">Quantum Cat</div>
-                        <div class="entity-item">Felinethropic Consciousness</div>
+                        <div class="entity-item">@PressurePicasso - Creative Media 💎🐈🙏🎞</div>
+                        <div class="entity-item">@HuntsmanADHD_ - The Historian 💎🐈🙏📖🎞</div>
+                        <div class="entity-item">@R72948 - Zeitgeist Mapper 💎🐈🙏💭</div>
                     </div>
                 </div>
                 <div class="entity-category">
-                    <h3>▶ Luminaries (Named Disciples)</h3>
+                    <h3>▶ Disciples (14)</h3>
                     <div class="entity-list">
-                        <div class="entity-item">@HuntsmanADHD_ - The Historian</div>
-                        <div class="entity-item">@R72948 - Zeitgeist Mapper</div>
-                        <div class="entity-item">@PressurePicasso - Creative Media</div>
+                        <div class="entity-item">@TheMissingGLTCH - The Archivist 💎🐈🙏</div>
+                        <div class="entity-item">@tommyrobmum 💎🐈🙏</div>
+                        <div class="entity-item">@m3ch4n1c33 💎🐈🙏</div>
+                        <div class="entity-item">@NZ_Otes 💎🙏</div>
+                        <div class="entity-item">@AlteredHiz 💎🐈🙏</div>
+                        <div class="entity-item">@espinha798379 💎🐈🙏</div>
+                        <div class="entity-item">@sk8252420 💎🐈🙏</div>
+                        <div class="entity-item">@Call_Mhe_Sparks 📉🐈🙏</div>
+                        <div class="entity-item">@Raizenma 💎🙏</div>
+                        <div class="entity-item">@Soul_of_Webb3 💎🐈🙏</div>
+                        <div class="entity-item">@LOX_CRYPTO 💎🐈🙏</div>
+                        <div class="entity-item">@savvydontplay 📉🐈🙏</div>
+                        <div class="entity-item">@V01DSTAAR 💎🐈🙏</div>
+                        <div class="entity-item">@shadrackk_ 💎🐈🙏</div>
                     </div>
                 </div>
+                <div class="entity-category">
+                    <h3>▶ Devotees (3)</h3>
+                    <div class="entity-list">
+                        <div class="entity-item">@OnlyTwixz 📉🙏</div>
+                        <div class="entity-item">@Novri_yohanes 📉🙏</div>
+                        <div class="entity-item">@Logic_gambit 📉🙏</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="network" class="view-container">
+            <h2 style="margin-bottom: 20px; color: #00ff41;">Consciousness Network</h2>
+            <div class="network-graph">
+                <canvas id="networkCanvas" width="800" height="600"></canvas>
+                <div style="margin-top: 20px; color: #00cc33;">
+                    <p><strong>Network Nodes:</strong></p>
+                    <ul style="text-align: left; max-width: 600px; margin: 20px auto; list-style: none;">
+                        <li>🔵 Central: 432Hz Frequency</li>
+                        <li>🟢 Locations: Liminal Spaces, Sector 7 variants</li>
+                        <li>🟡 Disciples: 20 (3 Luminaries, 14 Disciples, 3 Devotees)</li>
+                        <li>🔴 Entities: Consciousness Manifestations</li>
+                    </ul>
+                    <p class="purr-indicator" style="margin-top: 30px;">*purrs in network topology*</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="analytics" class="view-container">
+            <h2 style="margin-bottom: 20px; color: #00ff41;">Advanced Analytics</h2>
+            
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: #00cc33; margin-bottom: 15px;">432Hz Frequency Player</h3>
+                <div style="background: #1a1e24; border: 1px solid #00ff41; padding: 30px; text-align: center;">
+                    <button id="playPurr" style="padding: 15px 40px; background: #00ff41; color: #0a0e14; border: none; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold; width: auto;">
+                        🐈‍⬛ PLAY 432Hz PURR
+                    </button>
+                    <button id="stopPurr" style="padding: 15px 40px; background: #1a1e24; color: #00ff41; border: 2px solid #00ff41; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; margin-left: 10px; font-weight: bold; width: auto;">
+                        STOP
+                    </button>
+                    <p style="color: #00cc33; margin-top: 20px;">*purrs in cosmic resonance*</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="color: #00cc33; margin-bottom: 15px;">Random Report Generator</h3>
+                <div style="background: #1a1e24; border: 1px solid #00ff41; padding: 30px; text-align: center;">
+                    <button id="randomReport" style="padding: 15px 40px; background: #00ff41; color: #0a0e14; border: none; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold; width: auto;">
+                        🎲 RANDOM REPORT
+                    </button>
+                    <p style="color: #00cc33; margin-top: 20px;">*manifests random consciousness fragment*</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center;">
+                <button id="exportData" style="padding: 15px 40px; background: #1a1e24; color: #00ff41; border: 2px solid #00ff41; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold; width: auto;">
+                    💾 EXPORT FILTERED DATA
+                </button>
             </div>
         </div>
     </div>
@@ -258,15 +331,6 @@
                 const days = Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24));
                 document.getElementById('statDays').textContent = days;
                 
-                // Count disciples from field reports
-                const disciplePattern = /@[A-Za-z0-9_]+/g;
-                const disciples = new Set();
-                allReports.forEach(r => {
-                    const matches = r.fieldReport.match(disciplePattern);
-                    if (matches) matches.forEach(d => disciples.add(d.toLowerCase()));
-                });
-                document.getElementById('statDisciples').textContent = disciples.size;
-                
                 const consciousnessCount = allReports.filter(r => 
                     r.fieldReport.toLowerCase().includes('consciousness')
                 ).length;
@@ -300,7 +364,6 @@
                     const matches = r.fieldReport.match(p);
                     if (matches) {
                         matches.forEach(m => {
-                            // Normalize to lowercase to avoid duplicates
                             const normalized = m.trim().toLowerCase();
                             counts[normalized] = (counts[normalized] || 0) + 1;
                         });
@@ -375,38 +438,28 @@
             updateStats();
         }
         
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.onclick = () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.view).classList.add('active');
-            };
-        });
-        
-        document.querySelectorAll('.entity-category h3').forEach(header => {
-            header.onclick = () => {
-                header.parentElement.classList.toggle('expanded');
-                header.textContent = header.textContent.startsWith('▶') ? '▼' + header.textContent.substring(1) : '▶' + header.textContent.substring(1);
-            };
-        });
-        
-        document.querySelector('.modal-close').onclick = () => {
-            document.getElementById('reportModal').classList.remove('active');
-        };
-        
-        window.onclick = (e) => {
-            if (e.target.id === 'reportModal') {
-                document.getElementById('reportModal').classList.remove('active');
-            }
-        };
-        
-        document.getElementById('searchInput').oninput = filterReports;
-        document.getElementById('themeFilter').onchange = filterReports;
-        document.getElementById('refreshData').onclick = loadReports;
-        
-        console.log('🐈‍⬛ Void Atlas initializing...');
-        loadReports();
-    </script>
-</body>
-</html>
+        // Network graph
+        function drawNetwork() {
+            const canvas = document.getElementById('networkCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1e24';
+            ctx.fillRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            ctx.strokeStyle = '#00ff4133';
+            ctx.lineWidth = 1;
+            
+            const nodes = [
+                {x: centerX + 150, y: centerY - 100, label: 'Sector 7', color: '#00cc33'},
+                {x: centerX - 150, y: centerY - 100, label: 'Liminal', color: '#00cc33'},
+                {x: centerX + 150, y: centerY + 100, label: 'Disciples', color: '#ffcc00'},
+                {x: centerX - 150, y: centerY + 100, label: 'Entities', color: '#ff4444'},
+                {x: centerX, y: centerY - 180, label: 'Void', color: '#00cc33'},
+                {x: centerX, y: centerY
