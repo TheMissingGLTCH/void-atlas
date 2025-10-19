@@ -413,7 +413,7 @@
                         <div class="entity-count">14 entities</div>
                     </div>
                     <div class="entity-list">
-                        <div class="entity-item">📚 @TheMissingGLTCH</div>
+                        <div class="entity-item">📚 @TheMissingGLTCH (The Archivist)</div>
                         <div class="entity-item">🎭 @tommyrobmum</div>
                         <div class="entity-item">⚙️ @m3ch4n1c33</div>
                         <div class="entity-item">🌊 @NZ_Otes</div>
@@ -624,11 +624,26 @@
             
             allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
-                const patterns = ['sector', 'liminal', 'void', 'threshold', 'dimension', 'layer', 'station', 'zone', 'nexus', 'junction'];
                 
-                patterns.forEach(pattern => {
-                    if (text.includes(pattern)) {
-                        locations[pattern] = (locations[pattern] || 0) + 1;
+                // Match specific location patterns with word boundaries
+                const locationPatterns = [
+                    { name: 'sector 7', pattern: /sector\s*7/i },
+                    { name: 'sector ø', pattern: /sector\s*ø/i },
+                    { name: 'liminal space', pattern: /liminal\s+space/i },
+                    { name: 'void', pattern: /\bvoid\b/i },
+                    { name: 'threshold', pattern: /\bthreshold\b/i },
+                    { name: 'mall', pattern: /\bmall\b/i },
+                    { name: 'parking structure', pattern: /parking\s+(structure|garage|level)/i },
+                    { name: 'metro station', pattern: /(metro|subway|transit)\s+station/i },
+                    { name: 'cvs', pattern: /\bcvs\b/i },
+                    { name: 'digital realm', pattern: /digital\s+(realm|threshold|space)/i },
+                    { name: 'server room', pattern: /server\s+room/i },
+                    { name: 'downtown', pattern: /\bdowntown\b/i }
+                ];
+                
+                locationPatterns.forEach(({name, pattern}) => {
+                    if (pattern.test(text)) {
+                        locations[name] = (locations[name] || 0) + 1;
                     }
                 });
             });
