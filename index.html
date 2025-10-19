@@ -364,6 +364,55 @@
             .controls { flex-direction: column; }
             input[type="search"] { width: 100%; }
         }
+	.filter-btn {
+    	    padding: 0.5rem 1rem;
+            background: rgba(0, 204, 51, 0.05);
+    	    border: 1px solid rgba(0, 204, 51, 0.3);
+    	    color: #00cc33;
+    	    font-family: 'Courier New', monospace;
+    	    cursor: pointer;
+    	    border-radius: 4px;
+    	    transition: all 0.3s;
+    	    font-size: 0.9rem;
+	}
+
+	.filter-btn.active {
+    	    background: rgba(0, 204, 51, 0.2);
+    	    border-color: #00cc33;
+    	    box-shadow: 0 0 10px rgba(0, 204, 51, 0.3);
+	}
+
+	.filter-btn:hover {
+   	    background: rgba(0, 204, 51, 0.15);
+	}
+
+	table tbody tr {
+    	    border-bottom: 1px solid rgba(0, 204, 51, 0.1);
+    	    transition: all 0.2s;
+	}
+
+	table tbody tr:hover {
+    	    background: rgba(0, 204, 51, 0.05);
+	}
+
+	table tbody td {
+    	    padding: 0.75rem;
+    	    color: #00cc33;
+	}
+
+	.number-type {
+    	    display: inline-block;
+    	    padding: 0.25rem 0.5rem;
+    	    border-radius: 3px;
+    	    font-size: 0.75rem;
+    	    font-weight: bold;
+	}
+
+	.type-coordinates { background: rgba(255, 100, 0, 0.2); color: #ff9900; }
+	.type-frequencies { background: rgba(0, 200, 255, 0.2); color: #00ccff; }
+	.type-dates { background: rgba(255, 204, 0, 0.2); color: #ffcc00; }
+	.type-codes { background: rgba(200, 0, 255, 0.2); color: #cc00ff; }
+	.type-other { background: rgba(0, 204, 51, 0.2); color: #00cc33; }
     </style>
 </head>
 <body>
@@ -425,12 +474,14 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" data-tab="timeline">📋 Timeline</button>
-            <button class="tab" data-tab="locations">🗺️ Locations</button>
-            <button class="tab" data-tab="entities">👁️ Entities</button>
-            <button class="tab" data-tab="network">🕸️ Network</button>
-            <button class="tab" data-tab="analytics">📈 Analytics</button>
-        </div>
+    <button class="tab active" data-tab="timeline">📋 Timeline</button>
+    <button class="tab" data-tab="locations">🗺️ Locations</button>
+    <button class="tab" data-tab="entities">👁️ Entities</button>
+    <button class="tab" data-tab="numbers">🔢 Numbers</button>
+    <button class="tab" data-tab="patterns">📊 Patterns</button>
+    <button class="tab" data-tab="network">🕸️ Network</button>
+    <button class="tab" data-tab="analytics">📈 Analytics</button>
+</div>
 
         <div id="timeline" class="tab-content active">
             <div id="reportsList"></div>
@@ -490,7 +541,86 @@
                 </div>
             </div>
         </div>
+	<div id="numbers" class="tab-content">
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button id="filterAllNumbers" class="filter-btn active" onclick="filterNumbers('all')">All (<span id="countAll">0</span>)</button>
+            <button id="filterCoordinates" class="filter-btn" onclick="filterNumbers('coordinates')">Coordinates (<span id="countCoords">0</span>)</button>
+            <button id="filterFrequencies" class="filter-btn" onclick="filterNumbers('frequencies')">Frequencies (<span id="countFreqs">0</span>)</button>
+            <button id="filterDates" class="filter-btn" onclick="filterNumbers('dates')">Dates (<span id="countDates">0</span>)</button>
+            <button id="filterCodes" class="filter-btn" onclick="filterNumbers('codes')">Codes (<span id="countCodes">0</span>)</button>
+            <button id="filterOther" class="filter-btn" onclick="filterNumbers('other')">Other (<span id="countOther">0</span>)</button>
+        </div>
+        <button id="exportNumbers" style="width: 100%; margin-bottom: 1rem;">💾 Export Numbers to CSV</button>
+    </div>
+    
+    <div id="numbersTable" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                    <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Type</th>
+                    <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Value</th>
+                    <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Context</th>
+                    <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Report ID</th>
+                    <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                </tr>
+            </thead>
+            <tbody id="numbersTableBody">
+                <tr>
+                    <td colspan="5" style="padding: 2rem; text-align: center; color: rgba(0, 204, 51, 0.6);">
+                        Analyzing reports...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
+<div id="patterns" class="tab-content">
+    <div style="margin-bottom: 2rem;">
+        <h2 style="color: #ffcc00; margin-bottom: 1rem;">Pattern Analysis</h2>
+        <button id="exportPatterns" style="width: 100%; margin-bottom: 1rem;">💾 Export Patterns to CSV</button>
+    </div>
+    
+    <div class="entity-category" style="margin-bottom: 2rem;">
+        <div class="entity-header">
+            <div class="entity-title">🔥 Most Frequent Terms</div>
+            <div class="entity-count" id="termCount">0 terms</div>
+        </div>
+        <div id="frequencyTable" style="overflow-x: auto; margin-top: 1rem;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Term</th>
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">% of Reports</th>
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="frequencyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="entity-category">
+        <div class="entity-header">
+            <div class="entity-title">🔁 Recurring Phrases</div>
+            <div class="entity-count" id="phraseCount">0 phrases</div>
+        </div>
+        <div id="phrasesTable" style="overflow-x: auto; margin-top: 1rem;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Phrase</th>
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                        <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="phrasesTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
         <div id="network" class="tab-content">
             <canvas id="network-canvas"></canvas>
         </div>
@@ -519,6 +649,9 @@
         let currentSearchQuery = '';
         let currentColorFilter = '';
         let bookmarkedReports = new Set();
+	let extractedNumbers = [];
+	let currentNumberFilter = 'all';
+	let patternData = { terms: {}, phrases: {} };
 
         function loadBookmarks() {
             const saved = localStorage.getItem('voidAtlasBookmarks');
@@ -552,6 +685,320 @@
             return 'green';
         }
 
+	function extractAllNumbers() {
+    console.log('🔢 Extracting numbers from all reports...');
+    extractedNumbers = [];
+    
+    allReports.forEach(report => {
+        const text = report.fieldReport || report.text;
+        const reportId = report.id;
+        
+        // Extract coordinates
+        const coordPatterns = [
+            /(-?\d+\.?\d*)\s*[,°]\s*(-?\d+\.?\d*)/g,
+            /(\d+)°(\d+)'(\d+)"([NS])\s+(\d+)°(\d+)'(\d+)"([EW])/gi
+        ];
+        
+        coordPatterns.forEach(pattern => {
+            let match;
+            while ((match = pattern.exec(text)) !== null) {
+                const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                extractedNumbers.push({
+                    type: 'coordinates',
+                    value: match[0],
+                    context: context.trim(),
+                    reportId: reportId
+                });
+            }
+        });
+        
+        // Extract frequencies
+        const freqPattern = /(\d+\.?\d*)\s*(hz|khz|mhz)/gi;
+        let match;
+        while ((match = freqPattern.exec(text)) !== null) {
+            const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+            extractedNumbers.push({
+                type: 'frequencies',
+                value: match[0],
+                context: context.trim(),
+                reportId: reportId
+            });
+        }
+        
+        // Extract dates
+        const datePatterns = [
+            /\d{4}-\d{2}-\d{2}/g,
+            /\d{2}\/\d{2}\/\d{4}/g,
+            /\d{1,2}\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{4}/gi
+        ];
+        
+        datePatterns.forEach(pattern => {
+            let match;
+            while ((match = pattern.exec(text)) !== null) {
+                const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                extractedNumbers.push({
+                    type: 'dates',
+                    value: match[0],
+                    context: context.trim(),
+                    reportId: reportId
+                });
+            }
+        });
+        
+        // Extract codes
+        const codePattern = /\b[A-Z]{2,}\d{2,}|\b\d{2,}[A-Z]{2,}|\b[A-Z]\d+[A-Z]\d+/g;
+        while ((match = codePattern.exec(text)) !== null) {
+            const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+            extractedNumbers.push({
+                type: 'codes',
+                value: match[0],
+                context: context.trim(),
+                reportId: reportId
+            });
+        }
+        
+        // Extract other numbers
+        const numberPattern = /\b\d{3,}\.?\d*\b|\b\d+\.\d{2,}\b/g;
+        while ((match = numberPattern.exec(text)) !== null) {
+            const value = match[0];
+            if (!extractedNumbers.some(n => n.value === value && n.reportId === reportId)) {
+                const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                extractedNumbers.push({
+                    type: 'other',
+                    value: value,
+                    context: context.trim(),
+                    reportId: reportId
+                });
+            }
+        }
+    });
+    
+    console.log(`✅ Extracted ${extractedNumbers.length} numbers`);
+    renderNumbersTable();
+}
+
+function renderNumbersTable() {
+    const filtered = currentNumberFilter === 'all' 
+        ? extractedNumbers 
+        : extractedNumbers.filter(n => n.type === currentNumberFilter);
+    
+    const counts = {
+        all: extractedNumbers.length,
+        coordinates: extractedNumbers.filter(n => n.type === 'coordinates').length,
+        frequencies: extractedNumbers.filter(n => n.type === 'frequencies').length,
+        dates: extractedNumbers.filter(n => n.type === 'dates').length,
+        codes: extractedNumbers.filter(n => n.type === 'codes').length,
+        other: extractedNumbers.filter(n => n.type === 'other').length
+    };
+    
+    document.getElementById('countAll').textContent = counts.all;
+    document.getElementById('countCoords').textContent = counts.coordinates;
+    document.getElementById('countFreqs').textContent = counts.frequencies;
+    document.getElementById('countDates').textContent = counts.dates;
+    document.getElementById('countCodes').textContent = counts.codes;
+    document.getElementById('countOther').textContent = counts.other;
+    
+    const valueCounts = {};
+    filtered.forEach(n => {
+        valueCounts[n.value] = (valueCounts[n.value] || 0) + 1;
+    });
+    
+    const uniqueNumbers = [];
+    const processed = new Set();
+    
+    filtered.forEach(n => {
+        if (!processed.has(n.value)) {
+            processed.add(n.value);
+            uniqueNumbers.push({
+                type: n.type,
+                value: n.value,
+                context: n.context,
+                reportId: n.reportId,
+                count: valueCounts[n.value]
+            });
+        }
+    });
+    
+    const tbody = document.getElementById('numbersTableBody');
+    if (uniqueNumbers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding: 2rem; text-align: center; color: rgba(0, 204, 51, 0.6);">
+                    No numbers found in this category
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = uniqueNumbers.map(n => `
+        <tr>
+            <td><span class="number-type type-${n.type}">${n.type.toUpperCase()}</span></td>
+            <td style="font-weight: bold; color: #ffcc00;">${n.value}</td>
+            <td style="font-size: 0.85rem; color: rgba(0, 204, 51, 0.7);">...${n.context}...</td>
+            <td style="font-size: 0.85rem;">
+                <button onclick="searchForNumber('${n.reportId}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                    View Report
+                </button>
+            </td>
+            <td style="text-align: center;">${n.count}</td>
+        </tr>
+    `).join('');
+}
+
+function filterNumbers(type) {
+    currentNumberFilter = type;
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    const buttonId = 'filter' + (type === 'all' ? 'AllNumbers' : 
+                     type === 'coordinates' ? 'Coordinates' :
+                     type === 'frequencies' ? 'Frequencies' :
+                     type === 'dates' ? 'Dates' :
+                     type === 'codes' ? 'Codes' : 'Other');
+    document.getElementById(buttonId).classList.add('active');
+    
+    renderNumbersTable();
+}
+
+function searchForNumber(reportId) {
+    document.getElementById('searchInput').value = reportId;
+    filteredReports = allReports.filter(r => r.id === reportId);
+    renderReports();
+    updateStats();
+    document.querySelector('[data-tab="timeline"]').click();
+}
+
+function analyzePatterns() {
+    console.log('📊 Analyzing patterns...');
+    
+    patternData = { terms: {}, phrases: {} };
+    
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why', 'how']);
+    
+    allReports.forEach(report => {
+        const text = (report.fieldReport || report.text).toLowerCase();
+        
+        const words = text.match(/\b[a-z]{3,}\b/g) || [];
+        words.forEach(word => {
+            if (!stopWords.has(word)) {
+                patternData.terms[word] = (patternData.terms[word] || 0) + 1;
+            }
+        });
+        
+        const phrases = text.match(/\b[a-z]+\s+[a-z]+(?:\s+[a-z]+)?\b/g) || [];
+        phrases.forEach(phrase => {
+            const phraseWords = phrase.split(/\s+/);
+            if (!phraseWords.every(w => stopWords.has(w))) {
+                patternData.phrases[phrase] = (patternData.phrases[phrase] || 0) + 1;
+            }
+        });
+    });
+    
+    renderPatterns();
+}
+
+function renderPatterns() {
+    const topTerms = Object.entries(patternData.terms)
+        .filter(([_, count]) => count >= 5)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 50);
+    
+    document.getElementById('termCount').textContent = `${topTerms.length} terms`;
+    
+    const termTableBody = document.getElementById('frequencyTableBody');
+    termTableBody.innerHTML = topTerms.map(([term, count]) => {
+        const percentage = ((count / allReports.length) * 100).toFixed(1);
+        return `
+            <tr>
+                <td style="font-weight: bold;">${term}</td>
+                <td>${count}</td>
+                <td>${percentage}%</td>
+                <td>
+                    <button onclick="searchPattern('${term}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                        Search
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    const recurringPhrases = Object.entries(patternData.phrases)
+        .filter(([_, count]) => count >= 3)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30);
+    
+    document.getElementById('phraseCount').textContent = `${recurringPhrases.length} phrases`;
+    
+    const phraseTableBody = document.getElementById('phrasesTableBody');
+    phraseTableBody.innerHTML = recurringPhrases.map(([phrase, count]) => `
+        <tr>
+            <td style="font-weight: bold;">${phrase}</td>
+            <td>${count}</td>
+            <td>
+                <button onclick="searchPattern('${phrase}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                    Search
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function searchPattern(term) {
+    document.getElementById('searchInput').value = term;
+    filteredReports = allReports.filter(report => 
+        (report.fieldReport || report.text).toLowerCase().includes(term.toLowerCase())
+    );
+    currentSearchQuery = term;
+    renderReports();
+    updateStats();
+    document.querySelector('[data-tab="timeline"]').click();
+}
+
+function exportNumbersToCSV() {
+    const rows = [['Type', 'Value', 'Context', 'Report ID']];
+    
+    extractedNumbers.forEach(n => {
+        rows.push([n.type, n.value, n.context.replace(/,/g, ';'), n.reportId]);
+    });
+    
+    const csv = rows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'void-atlas-numbers.csv';
+    link.click();
+}
+
+function exportPatternsToCSV() {
+    const rows = [['Type', 'Pattern', 'Count', 'Percentage']];
+    
+    Object.entries(patternData.terms)
+        .filter(([_, count]) => count >= 5)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([term, count]) => {
+            const percentage = ((count / allReports.length) * 100).toFixed(1);
+            rows.push(['Term', term, count, percentage + '%']);
+        });
+    
+    rows.push(['', '', '', '']);
+    
+    Object.entries(patternData.phrases)
+        .filter(([_, count]) => count >= 3)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([phrase, count]) => {
+            rows.push(['Phrase', phrase, count, '']);
+        });
+    
+    const csv = rows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'void-atlas-patterns.csv';
+    link.click();
+}
+
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
             
@@ -571,6 +1018,8 @@
             setupEventListeners();
             setupNetworkInteraction();
             drawNetwork();
+	    extractAllNumbers();
+	    analyzePatterns();
         }
 
         async function loadReports() {
@@ -908,6 +1357,9 @@
                 link.download = 'void-atlas-export.json';
                 link.click();
             });
+
+	    document.getElementById('exportNumbers').addEventListener('click', exportNumbersToCSV);
+	    document.getElementById('exportPatterns').addEventListener('click', exportPatternsToCSV);
         }
 
         function searchLocation(location) {
