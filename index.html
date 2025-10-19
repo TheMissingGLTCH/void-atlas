@@ -770,9 +770,7 @@ while ((match = numberPattern.exec(text)) !== null) {
             context: context.trim(),
             reportId: reportId
         });
-    }
-}
-    
+
     console.log(`✅ Extracted ${extractedNumbers.length} numbers`);
     renderNumbersTable();
 }
