@@ -745,33 +745,33 @@
             }
         });
         
-        // Extract codes
-        const codePattern = /\b[A-Z]{2,}\d{2,}|\b\d{2,}[A-Z]{2,}|\b[A-Z]\d+[A-Z]\d+/g;
-        while ((match = codePattern.exec(text)) !== null) {
-            const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
-            extractedNumbers.push({
-                type: 'codes',
-                value: match[0],
-                context: context.trim(),
-                reportId: reportId
-            });
-        }
-        
-        // Extract other numbers
-        const numberPattern = /\b\d{3,}\.?\d*\b|\b\d+\.\d{2,}\b/g;
-        while ((match = numberPattern.exec(text)) !== null) {
-            const value = match[0];
-            if (!extractedNumbers.some(n => n.value === value && n.reportId === reportId)) {
-                const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
-                extractedNumbers.push({
-                    type: 'other',
-                    value: value,
-                    context: context.trim(),
-                    reportId: reportId
-                });
-            }
-        }
+        // Extract codes/IDs (alphanumeric patterns - these are often significant)
+const codePattern = /\b[A-Z0-9]{2,}[A-Z][0-9]|[0-9][A-Z]|0x[0-9A-Fa-f]+\b/g;
+while ((match = codePattern.exec(text)) !== null) {
+    const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+    extractedNumbers.push({
+        type: 'codes',
+        value: match[0],
+        context: context.trim(),
+        reportId: reportId
     });
+}
+
+// Extract ALL numbers (2+ digits or decimals) - frequency will show importance
+const numberPattern = /\b\d{2,}\.?\d*\b|\b\d+\.\d+\b/g;
+while ((match = numberPattern.exec(text)) !== null) {
+    const value = match[0];
+    // Skip if already captured as another type
+    if (!extractedNumbers.some(n => n.value === value && n.reportId === reportId)) {
+        const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+        extractedNumbers.push({
+            type: 'other',
+            value: value,
+            context: context.trim(),
+            reportId: reportId
+        });
+    }
+}
     
     console.log(`✅ Extracted ${extractedNumbers.length} numbers`);
     renderNumbersTable();
@@ -810,14 +810,17 @@ function renderNumbersTable() {
         if (!processed.has(n.value)) {
             processed.add(n.value);
             uniqueNumbers.push({
-                type: n.type,
-                value: n.value,
-                context: n.context,
-                reportId: n.reportId,
-                count: valueCounts[n.value]
-            });
+    type: n.type,
+    value: n.value,
+    context: n.context,
+    reportId: n.reportId,
+    count: valueCounts[n.value]
+});
         }
     });
+    
+    // Sort by count (frequency) - most common first
+    uniqueNumbers.sort((a, b) => b.count - a.count);
     
     const tbody = document.getElementById('numbersTableBody');
     if (uniqueNumbers.length === 0) {
@@ -831,7 +834,14 @@ function renderNumbersTable() {
         return;
     }
     
-    tbody.innerHTML = uniqueNumbers.map(n => `
+    tbody.innerHTML = uniqueNumbers.map(n => {
+        // Significance indicator
+        let significance = '';
+        if (n.count >= 10) significance = '🔥🔥🔥';
+        else if (n.count >= 5) significance = '🔥🔥';
+        else if (n.count >= 3) significance = '🔥';
+        
+        return `
         <tr>
             <td><span class="number-type type-${n.type}">${n.type.toUpperCase()}</span></td>
             <td style="font-weight: bold; color: #ffcc00;">${n.value}</td>
@@ -841,9 +851,9 @@ function renderNumbersTable() {
                     View Report
                 </button>
             </td>
-            <td style="text-align: center;">${n.count}</td>
+            <td style="text-align: center;">${significance} ${n.count}</td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function filterNumbers(type) {
