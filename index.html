@@ -149,11 +149,16 @@
             margin-bottom: 1rem;
             border-radius: 4px;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .report-card:hover {
             background: rgba(0, 204, 51, 0.05);
             box-shadow: 0 0 15px rgba(0, 204, 51, 0.3);
+        }
+        
+        .report-card.expanded {
+            background: rgba(0, 204, 51, 0.08);
         }
 
         .report-header {
@@ -192,14 +197,26 @@
         .report-content {
             white-space: pre-wrap;
             line-height: 1.8;
-        }
-
-        .report-tweet {
+            display: none;
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid rgba(0, 204, 51, 0.2);
-            font-size: 0.9rem;
-            color: #999;
+        }
+        
+        .report-content.visible {
+            display: block;
+        }
+
+        .report-tweet {
+            font-size: 0.95rem;
+            color: #00cc33;
+            line-height: 1.6;
+        }
+        
+        .report-preview {
+            color: rgba(0, 204, 51, 0.7);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
         }
 
         .report-error {
@@ -402,7 +419,6 @@
         <div class="tabs">
             <button class="tab active" data-tab="timeline">📋 Timeline</button>
             <button class="tab" data-tab="locations">🗺️ Locations</button>
-            <button class="tab" data-tab="frequencies">📊 Frequencies</button>
             <button class="tab" data-tab="entities">👁️ Entities</button>
             <button class="tab" data-tab="network">🕸️ Network</button>
             <button class="tab" data-tab="analytics">📈 Analytics</button>
@@ -414,13 +430,6 @@
 
         <div id="locations" class="tab-content">
             <div class="locations-grid" id="locationsList"></div>
-        </div>
-
-        <div id="frequencies" class="tab-content">
-            <div class="frequency-spectrum" id="frequencySpectrum">
-                <h2 style="margin-bottom: 1.5rem; color: #ffcc00;">Frequency Spectrum Analysis</h2>
-                <div id="frequencyBars"></div>
-            </div>
         </div>
 
         <div id="entities" class="tab-content">
@@ -546,7 +555,6 @@
                 updateStats();
                 renderReports();
                 updateLocations();
-                updateFrequencies();
                 
                 // Load field reports
                 console.log('📥 Loading field reports...');
@@ -714,8 +722,8 @@
 
         function renderReports() {
             const reportsList = document.getElementById('reportsList');
-            reportsList.innerHTML = filteredReports.map(report => `
-                <div class="report-card">
+            reportsList.innerHTML = filteredReports.map((report, index) => `
+                <div class="report-card" onclick="toggleReport(${index})">
                     <div class="report-header">
                         <span class="report-date">${report.date}</span>
                         <span class="report-id">ID: ${report.id}</span>
@@ -724,12 +732,20 @@
                     </div>
                     ${report.reportType === 'png' ? 
                         `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
-                        `<div class="report-content">${report.fieldReport || 'Loading...'}</div>`
+                        `<div class="report-tweet">${report.text}</div>
+                         <div class="report-preview">Click to ${report.reportType === 'tweet' ? 'view full tweet' : 'expand field report'}</div>
+                         <div class="report-content" id="report-${index}">${report.fieldReport || 'Loading...'}</div>`
                     }
-                    ${report.reportType !== 'png' && report.reportType === 'tweet' ? 
-                        '<div class="report-error">⚠️ Field report file not available - showing tweet</div>' : ''}
                 </div>
             `).join('');
+        }
+        
+        function toggleReport(index) {
+            const contentDiv = document.getElementById(`report-${index}`);
+            if (contentDiv) {
+                contentDiv.classList.toggle('visible');
+                contentDiv.parentElement.classList.toggle('expanded');
+            }
         }
 
         function setupEventListeners() {
