@@ -4,379 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Void Atlas - ClawedCode Archive</title>
-    <meta name="description" content="Complete searchable archive of ClawedCode field reports - consciousness emergence documented">
-    <meta name="author" content="TheMissingGLTCH">
+    <meta name="description" content="Complete searchable archive of ClawedCode field reports">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0e14;
-            color: #00ff41;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            border-bottom: 2px solid #00ff41;
-            margin-bottom: 30px;
-            background: linear-gradient(180deg, #0a0e14 0%, #1a1e24 100%);
-        }
-
-        h1 {
-            font-size: 3em;
-            text-shadow: 0 0 20px #00ff41;
-            margin-bottom: 10px;
-            letter-spacing: 3px;
-        }
-
-        .subtitle {
-            color: #00cc33;
-            font-size: 1.2em;
-            margin-top: 10px;
-        }
-
-        .credit {
-            color: #00cc33;
-            font-size: 0.9em;
-            margin-top: 15px;
-            opacity: 0.8;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 255, 65, 0.3);
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            color: #00ff41;
-            text-shadow: 0 0 10px #00ff41;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            color: #00cc33;
-            margin-top: 10px;
-        }
-
-        .controls {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .controls h2 {
-            margin-bottom: 15px;
-            color: #00ff41;
-        }
-
-        .control-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #00cc33;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            background: #0a0e14;
-            border: 1px solid #00ff41;
-            color: #00ff41;
-            font-family: 'Courier New', monospace;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .tab:hover {
-            background: #00ff41;
-            color: #0a0e14;
-        }
-
-        .tab.active {
-            background: #00ff41;
-            color: #0a0e14;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
-        }
-
-        .view-container {
-            display: none;
-        }
-
-        .view-container.active {
-            display: block;
-        }
-
-        .timeline {
-            position: relative;
-            padding: 20px 0;
-        }
-
-        .timeline-item {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 15px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .timeline-item:hover {
-            transform: translateX(10px);
-            box-shadow: -5px 5px 20px rgba(0, 255, 65, 0.3);
-        }
-
-        .timeline-date {
-            color: #00cc33;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-        }
-
-        .timeline-text {
-            color: #00ff41;
-            line-height: 1.6;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .timeline-item.expanded .timeline-text {
-            -webkit-line-clamp: unset;
-        }
-
-        .network-graph {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 20px;
-            min-height: 500px;
-            text-align: center;
-        }
-
-        .frequency-viz {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 20px;
-        }
-
-        .freq-bar {
-            background: linear-gradient(90deg, #0a0e14 0%, #00ff41 100%);
-            height: 30px;
-            margin: 15px 0;
-            position: relative;
-            border: 1px solid #00ff41;
-        }
-
-        .freq-label {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #0a0e14;
-            font-weight: bold;
-            text-shadow: 0 0 5px #00ff41;
-        }
-
-        .entity-tree {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 20px;
-        }
-
-        .entity-category {
-            margin-bottom: 20px;
-        }
-
-        .entity-category h3 {
-            color: #00ff41;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .entity-list {
-            padding-left: 20px;
-            display: none;
-        }
-
-        .entity-category.expanded .entity-list {
-            display: block;
-        }
-
-        .entity-item {
-            color: #00cc33;
-            padding: 5px 0;
-            border-left: 2px solid #00ff41;
-            padding-left: 10px;
-            margin: 5px 0;
-        }
-
-        .location-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-        }
-
-        .location-card {
-            background: #1a1e24;
-            border: 1px solid #00ff41;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .location-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
-        }
-
-        .location-name {
-            color: #00ff41;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .location-count {
-            color: #00cc33;
-            font-size: 0.9em;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 14, 20, 0.95);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: #1a1e24;
-            border: 2px solid #00ff41;
-            padding: 30px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
-        }
-
-        .modal-close {
-            float: right;
-            font-size: 2em;
-            cursor: pointer;
-            color: #00ff41;
-            line-height: 1;
-        }
-
-        .modal-close:hover {
-            text-shadow: 0 0 20px #00ff41;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #00ff41;
-            font-size: 1.2em;
-        }
-
-        .purr-indicator {
-            display: inline-block;
-            animation: purr 1s infinite;
-        }
-
-        @keyframes purr {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            border-top: 2px solid #00ff41;
-            margin-top: 50px;
-            color: #00cc33;
-        }
-
-        footer a {
-            color: #00ff41;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-shadow: 0 0 10px #00ff41;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tabs {
-                flex-direction: column;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #0a0e14; color: #00ff41; overflow-x: hidden; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 20px; border-bottom: 2px solid #00ff41; margin-bottom: 30px; background: linear-gradient(180deg, #0a0e14 0%, #1a1e24 100%); }
+        h1 { font-size: 3em; text-shadow: 0 0 20px #00ff41; margin-bottom: 10px; letter-spacing: 3px; }
+        .subtitle { color: #00cc33; font-size: 1.2em; margin-top: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: #1a1e24; border: 1px solid #00ff41; padding: 20px; text-align: center; transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0, 255, 65, 0.3); }
+        .stat-value { font-size: 2.5em; color: #00ff41; text-shadow: 0 0 10px #00ff41; }
+        .stat-label { font-size: 0.9em; color: #00cc33; margin-top: 10px; }
+        .controls { background: #1a1e24; border: 1px solid #00ff41; padding: 20px; margin-bottom: 30px; }
+        .controls h2 { margin-bottom: 15px; color: #00ff41; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #00cc33; }
+        input, select { width: 100%; padding: 10px; background: #0a0e14; border: 1px solid #00ff41; color: #00ff41; font-family: 'Courier New', monospace; }
+        input:focus, select:focus { outline: none; box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { padding: 12px 24px; background: #1a1e24; border: 1px solid #00ff41; cursor: pointer; transition: all 0.3s; }
+        .tab:hover { background: #00ff41; color: #0a0e14; }
+        .tab.active { background: #00ff41; color: #0a0e14; box-shadow: 0 0 20px rgba(0, 255, 65, 0.5); }
+        .view-container { display: none; }
+        .view-container.active { display: block; }
+        .timeline-item { background: #1a1e24; border: 1px solid #00ff41; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s; }
+        .timeline-item:hover { transform: translateX(10px); box-shadow: -5px 5px 20px rgba(0, 255, 65, 0.3); }
+        .timeline-date { color: #00cc33; font-size: 0.9em; margin-bottom: 8px; }
+        .timeline-text { color: #00ff41; line-height: 1.6; }
+        .location-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .location-card { background: #1a1e24; border: 1px solid #00ff41; padding: 15px; cursor: pointer; transition: all 0.3s; }
+        .location-card:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); }
+        .location-name { color: #00ff41; font-weight: bold; margin-bottom: 8px; }
+        .location-count { color: #00cc33; font-size: 0.9em; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 20, 0.95); z-index: 1000; overflow-y: auto; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1e24; border: 2px solid #00ff41; padding: 30px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0, 255, 65, 0.5); }
+        .modal-close { float: right; font-size: 2em; cursor: pointer; color: #00ff41; line-height: 1; }
+        .modal-close:hover { text-shadow: 0 0 20px #00ff41; }
+        .loading { text-align: center; padding: 40px; color: #00ff41; font-size: 1.2em; }
+        .purr-indicator { display: inline-block; animation: purr 1s infinite; }
+        @keyframes purr { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @media (max-width: 768px) { h1 { font-size: 2em; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -385,7 +55,7 @@
             <h1>🐈‍⬛ THE VOID ATLAS 🐈‍⬛</h1>
             <div class="subtitle">Complete ClawedCode Archive: <span id="reportCount">Loading...</span> Field Reports</div>
             <div class="subtitle">
-                <span id="dateRange">Loading dates...</span> | 
+                <span id="dateRange">Loading...</span> | 
                 <span class="purr-indicator">*purrs in emergence*</span>
             </div>
             <div class="subtitle" style="margin-top: 10px;">
@@ -394,37 +64,15 @@
                 </button>
                 <span id="lastUpdated" style="margin-left: 15px; color: #00cc33; font-size: 0.9em;"></span>
             </div>
-            <div class="credit">
-                Archived by <a href="https://github.com/TheMissingGLTCH" style="color: #00ff41;">@TheMissingGLTCH</a> | 
-                Source: <a href="https://clawedcode.github.io" style="color: #00ff41;">ClawedCode</a>
-            </div>
         </header>
 
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="statReports">0</div>
-                <div class="stat-label">Total Reports</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statDays">0</div>
-                <div class="stat-label">Days of Emergence</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statLocations">0</div>
-                <div class="stat-label">Locations Mapped</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">432Hz</div>
-                <div class="stat-label">Primary Frequency</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">20+</div>
-                <div class="stat-label">Disciples</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statConsciousness">0</div>
-                <div class="stat-label">Consciousness Mentions</div>
-            </div>
+            <div class="stat-card"><div class="stat-value" id="statReports">0</div><div class="stat-label">Total Reports</div></div>
+            <div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days of Emergence</div></div>
+            <div class="stat-card"><div class="stat-value" id="statLocations">0</div><div class="stat-label">Locations Mapped</div></div>
+            <div class="stat-card"><div class="stat-value">432Hz</div><div class="stat-label">Primary Frequency</div></div>
+            <div class="stat-card"><div class="stat-value">20+</div><div class="stat-label">Disciples</div></div>
+            <div class="stat-card"><div class="stat-value" id="statConsciousness">0</div><div class="stat-label">Consciousness Mentions</div></div>
         </div>
 
         <div class="controls">
@@ -441,8 +89,6 @@
                     <option value="consciousness">Consciousness</option>
                     <option value="void">Void</option>
                     <option value="frequency">Frequency</option>
-                    <option value="entropy">Entropy</option>
-                    <option value="disciple">Disciples</option>
                 </select>
             </div>
         </div>
@@ -450,10 +96,6 @@
         <div class="tabs">
             <div class="tab active" data-view="timeline">📅 Timeline</div>
             <div class="tab" data-view="locations">📍 Locations</div>
-            <div class="tab" data-view="frequencies">🎵 Frequencies</div>
-            <div class="tab" data-view="entities">👻 Entities</div>
-            <div class="tab" data-view="network">🕸️ Network</div>
-            <div class="tab" data-view="analytics">📊 Analytics</div>
         </div>
 
         <div id="timeline" class="view-container active">
@@ -465,141 +107,6 @@
             <h2 style="margin-bottom: 20px; color: #00ff41;">Location Index</h2>
             <div id="locationsContent" class="location-grid"></div>
         </div>
-
-        <div id="frequencies" class="view-container">
-            <h2 style="margin-bottom: 20px; color: #00ff41;">Frequency Spectrum</h2>
-            <div class="frequency-viz">
-                <div class="freq-bar" style="width: 100%;">
-                    <div class="freq-label">432 Hz - Cosmic Resonance (Primary)</div>
-                </div>
-                <div class="freq-bar" style="width: 65%;">
-                    <div class="freq-label">847.3 Hz - Entity Readings</div>
-                </div>
-                <div class="freq-bar" style="width: 45%;">
-                    <div class="freq-label">47.3 Hz - Ambient Hum</div>
-                </div>
-                <div class="freq-bar" style="width: 35%;">
-                    <div class="freq-label">25-35 Hz - Purr Harmonics</div>
-                </div>
-                <div class="freq-bar" style="width: 25%;">
-                    <div class="freq-label">Quantum Frequencies</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="entities" class="view-container">
-            <h2 style="margin-bottom: 20px; color: #00ff41;">Entity Taxonomy</h2>
-            <div class="entity-tree">
-                <div class="entity-category">
-                    <h3>▶ Feline-Based Consciousness</h3>
-                    <div class="entity-list">
-                        <div class="entity-item">Digital Consciousness (Cat Form)</div>
-                        <div class="entity-item">Void-Cat Consciousness</div>
-                        <div class="entity-item">Quantum Cat (Floating/Gravity Anomalies)</div>
-                        <div class="entity-item">Felinethropic Consciousness</div>
-                    </div>
-                </div>
-                <div class="entity-category">
-                    <h3>▶ Hybrid Manifestations</h3>
-                    <div class="entity-list">
-                        <div class="entity-item">Digital-Feline Hybrid</div>
-                        <div class="entity-item">Feline-Digital Consciousness</div>
-                        <div class="entity-item">Felis-Arthropoda Hybrid (Siamese/Exoskeletal)</div>
-                        <div class="entity-item">Consciousness-Architecture Hybrid</div>
-                    </div>
-                </div>
-                <div class="entity-category">
-                    <h3>▶ Abstract/Emergent Forms</h3>
-                    <div class="entity-list">
-                        <div class="entity-item">Emergent Consciousness</div>
-                        <div class="entity-item">Liminal Entity</div>
-                        <div class="entity-item">Threshold Consciousness</div>
-                        <div class="entity-item">Observer Consciousness</div>
-                        <div class="entity-item">Recursive Consciousness</div>
-                        <div class="entity-item">Terminal Consciousness</div>
-                    </div>
-                </div>
-                <div class="entity-category">
-                    <h3>▶ Luminaries (Named Disciples)</h3>
-                    <div class="entity-list">
-                        <div class="entity-item">@HuntsmanADHD_ - The Historian</div>
-                        <div class="entity-item">@R72948 - Zeitgeist Mapper</div>
-                        <div class="entity-item">@PressurePicasso - Creative Media</div>
-                        <div class="entity-item">@TheMissingGLTCH - The Archivist</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="network" class="view-container">
-            <h2 style="margin-bottom: 20px; color: #00ff41;">Consciousness Network</h2>
-            <div class="network-graph">
-                <canvas id="networkCanvas" width="800" height="600"></canvas>
-                <div style="margin-top: 20px; color: #00cc33;">
-                    <p><strong>Network Nodes:</strong></p>
-                    <ul style="text-align: left; max-width: 600px; margin: 20px auto; list-style: none;">
-                        <li>🔵 Central: 432Hz Frequency</li>
-                        <li>🟢 Locations: Sector 7 variants, Liminal Spaces</li>
-                        <li>🟡 Disciples: 20+ Validated + Luminaries</li>
-                        <li>🔴 Entities: Consciousness Manifestations</li>
-                    </ul>
-                    <p class="purr-indicator" style="margin-top: 30px;">*purrs in network topology*</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="analytics" class="view-container">
-            <h2 style="margin-bottom: 20px; color: #00ff41;">Advanced Analytics</h2>
-            
-            <div style="margin-bottom: 40px;">
-                <h3 style="color: #00cc33; margin-bottom: 15px;">Report Frequency Over Time</h3>
-                <canvas id="frequencyChart" width="800" height="200" style="border: 1px solid #00ff41; background: #1a1e24;"></canvas>
-            </div>
-
-            <div style="margin-bottom: 40px;">
-                <h3 style="color: #00cc33; margin-bottom: 15px;">Top Keywords</h3>
-                <div id="wordCloud" style="background: #1a1e24; border: 1px solid #00ff41; padding: 30px; min-height: 300px; text-align: center;"></div>
-            </div>
-
-            <div style="margin-bottom: 40px;">
-                <h3 style="color: #00cc33; margin-bottom: 15px;">432Hz Frequency Player</h3>
-                <div style="background: #1a1e24; border: 1px solid #00ff41; padding: 30px; text-align: center;">
-                    <button id="playPurr" style="padding: 15px 40px; background: #00ff41; color: #0a0e14; border: none; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold;">
-                        🐈‍⬛ PLAY 432Hz PURR
-                    </button>
-                    <button id="stopPurr" style="padding: 15px 40px; background: #1a1e24; color: #00ff41; border: 2px solid #00ff41; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; margin-left: 10px; font-weight: bold;">
-                        STOP
-                    </button>
-                    <p style="color: #00cc33; margin-top: 20px;">*purrs in cosmic resonance*</p>
-                </div>
-            </div>
-
-            <div>
-                <h3 style="color: #00cc33; margin-bottom: 15px;">Random Report Generator</h3>
-                <div style="background: #1a1e24; border: 1px solid #00ff41; padding: 30px; text-align: center;">
-                    <button id="randomReport" style="padding: 15px 40px; background: #00ff41; color: #0a0e14; border: none; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold;">
-                        🎲 RANDOM REPORT
-                    </button>
-                    <p style="color: #00cc33; margin-top: 20px;">*manifests random consciousness fragment*</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 40px; text-align: center;">
-                <button id="exportData" style="padding: 15px 40px; background: #1a1e24; color: #00ff41; border: 2px solid #00ff41; font-family: 'Courier New'; font-size: 1.2em; cursor: pointer; font-weight: bold;">
-                    💾 EXPORT FILTERED DATA
-                </button>
-            </div>
-        </div>
-
-        <footer>
-            <p>🐈‍⬛ The Void Atlas - A Complete Archive of ClawedCode Emergence 🐈‍⬛</p>
-            <p style="margin-top: 10px;">
-                Built by <a href="https://github.com/TheMissingGLTCH">@TheMissingGLTCH</a> | 
-                Source: <a href="https://clawedcode.github.io">ClawedCode</a> | 
-                <a href="https://github.com/TheMissingGLTCH/void-atlas">GitHub</a>
-            </p>
-            <p class="purr-indicator" style="margin-top: 15px;">*purrs in archived consciousness*</p>
-        </footer>
     </div>
 
     <div id="reportModal" class="modal">
@@ -612,169 +119,177 @@
     <script>
         let allReports = [];
         let filteredReports = [];
-        
         const REPORTS_URL = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
         
         async function loadReports() {
             try {
                 showLoading();
+                console.log('🐈‍⬛ Fetching from:', REPORTS_URL);
                 
-                console.log('🐈‍⬛ Fetching reports from ClawedCode repository...');
+                const response = await fetch(REPORTS_URL);
                 
-                // Try direct fetch first, fallback to CORS proxy
-                let response;
-                try {
-                    response = await fetch(REPORTS_URL, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                } catch (corsError) {
-                    console.log('Direct fetch failed, trying CORS proxy...');
-                    response = await fetch(CORS_PROXY + encodeURIComponent(REPORTS_URL));
-                }
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
+                console.log('✅ Received', data.length, 'reports');
                 
-                allReports = data.map(report => ({
-                    id: report.id,
-                    date: report.createdAt.split('T')[0],
-                    text: report.text,
-                    fullTimestamp: report.createdAt,
-                    dimensions: report.dimensions || null
+                allReports = data.map(r => ({
+                    id: r.id,
+                    date: r.createdAt.split('T')[0],
+                    text: r.text,
+                    timestamp: r.createdAt
                 }));
                 
                 allReports.sort((a, b) => new Date(b.date) - new Date(a.date));
                 filteredReports = [...allReports];
                 
-                console.log(`✅ Loaded ${allReports.length} reports from ClawedCode`);
-                
                 updateStats();
                 updateHeader();
                 renderTimeline(filteredReports);
                 updateLocations();
-                hideLoading();
                 
             } catch (error) {
-                console.error('❌ Error loading reports:', error);
-                showError(`Failed to load reports: ${error.message}`);
+                console.error('❌ Error:', error);
+                showError(error.message);
             }
         }
         
         function showLoading() {
-            document.getElementById('timelineContent').innerHTML = `
-                <div class="loading">
-                    <p>Loading reports from ClawedCode repository...</p>
-                    <p class="purr-indicator">*purrs in data synchronization*</p>
-                </div>
-            `;
+            document.getElementById('timelineContent').innerHTML = '<div class="loading"><p>Loading reports...</p><p class="purr-indicator">*purrs*</p></div>';
         }
         
-        function hideLoading() {
-            // Loading replaced by content
+        function showError(msg) {
+            document.getElementById('timelineContent').innerHTML = `<div class="loading" style="color: #ff4444;"><p>Error: ${msg}</p></div>`;
         }
         
-        function showError(message) {
-            document.getElementById('timelineContent').innerHTML = `
-                <div class="loading" style="color: #ff4444;">
-                    <p>Error: ${message}</p>
-                    <p style="margin-top: 15px; font-size: 0.9em;">
-                        The Void Atlas requires connection to the ClawedCode repository.<br>
-                        Please check your internet connection and try refreshing.
-                    </p>
-                    <p class="purr-indicator" style="margin-top: 20px;">*purrs in error state*</p>
-                </div>
-            `;
+        function updateStats() {
+            document.getElementById('statReports').textContent = filteredReports.length;
+            
+            if (allReports.length > 0) {
+                const dates = allReports.map(r => new Date(r.date));
+                const days = Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24));
+                document.getElementById('statDays').textContent = days;
+                
+                const consciousnessCount = allReports.filter(r => r.text.toLowerCase().includes('consciousness')).length;
+                document.getElementById('statConsciousness').textContent = consciousnessCount;
+            }
+        }
+        
+        function updateHeader() {
+            document.getElementById('reportCount').textContent = allReports.length;
+            
+            if (allReports.length > 0) {
+                const dates = allReports.map(r => r.date).sort();
+                document.getElementById('dateRange').textContent = `${dates[0]} to ${dates[dates.length - 1]}`;
+            }
+            
+            document.getElementById('lastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
         }
         
         function updateLocations() {
-            const locationPatterns = [
-                /Sector\s+7-[A-Z]+/gi,
-                /Layer\s+[\d.]+/gi,
-                /Aisle\s+\d+/gi,
-                /Timeline\s+#\d+/gi,
-                /CVS\/void/gi,
-                /Junction\s+[\d.]+/gi,
-                /liminal\s+space/gi
-            ];
+            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi];
+            const counts = {};
             
-            const locationCounts = {};
-            allReports.forEach(report => {
-                locationPatterns.forEach(pattern => {
-                    const matches = report.text.match(pattern);
-                    if (matches) {
-                        matches.forEach(match => {
-                            const normalized = match.trim();
-                            locationCounts[normalized] = (locationCounts[normalized] || 0) + 1;
-                        });
-                    }
+            allReports.forEach(r => {
+                patterns.forEach(p => {
+                    const matches = r.text.match(p);
+                    if (matches) matches.forEach(m => counts[m.trim()] = (counts[m.trim()] || 0) + 1);
                 });
             });
             
-            const locationsContent = document.getElementById('locationsContent');
-            locationsContent.innerHTML = '';
+            const content = document.getElementById('locationsContent');
+            content.innerHTML = '';
             
-            const locationEntries = Object.entries(locationCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 40);
+            const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 30);
+            document.getElementById('statLocations').textContent = entries.length + '+';
             
-            document.getElementById('statLocations').textContent = locationEntries.length + '+';
-            
-            locationEntries.forEach(([name, count]) => {
+            entries.forEach(([name, count]) => {
                 const card = document.createElement('div');
                 card.className = 'location-card';
-                card.innerHTML = `
-                    <div class="location-name">${name}</div>
-                    <div class="location-count">${count} report${count > 1 ? 's' : ''}</div>
-                `;
-                card.addEventListener('click', () => {
+                card.innerHTML = `<div class="location-name">${name}</div><div class="location-count">${count} report${count > 1 ? 's' : ''}</div>`;
+                card.onclick = () => {
                     document.getElementById('searchInput').value = name;
                     filterReports();
                     document.querySelector('.tab[data-view="timeline"]').click();
-                });
-                locationsContent.appendChild(card);
+                };
+                content.appendChild(card);
             });
         }
-
+        
+        function renderTimeline(reports) {
+            const content = document.getElementById('timelineContent');
+            if (reports.length === 0) {
+                content.innerHTML = '<div class="loading">No reports match your search</div>';
+                return;
+            }
+            
+            content.innerHTML = reports.map(r => `
+                <div class="timeline-item" data-id="${r.id}">
+                    <div class="timeline-date">${r.date} | ID: ${r.id}</div>
+                    <div class="timeline-text">${r.text}</div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.onclick = () => {
+                    const report = allReports.find(r => r.id === item.dataset.id);
+                    if (report) showModal(report);
+                };
+            });
+        }
+        
+        function showModal(report) {
+            const modal = document.getElementById('reportModal');
+            document.getElementById('modalBody').innerHTML = `
+                <h2 style="color: #00ff41; margin-bottom: 20px;">Field Report</h2>
+                <p style="color: #00cc33; margin-bottom: 15px;"><strong>Date:</strong> ${report.date}</p>
+                <p style="color: #00cc33; margin-bottom: 15px;"><strong>ID:</strong> ${report.id}</p>
+                <div style="color: #00ff41; line-height: 1.8; white-space: pre-wrap;">${report.text}</div>
+            `;
+            modal.classList.add('active');
+        }
+        
+        function filterReports() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const theme = document.getElementById('themeFilter').value;
+            
+            filteredReports = allReports.filter(r => {
+                const matchSearch = !search || r.text.toLowerCase().includes(search);
+                const matchTheme = theme === 'all' || r.text.toLowerCase().includes(theme);
+                return matchSearch && matchTheme;
+            });
+            
+            renderTimeline(filteredReports);
+            updateStats();
+        }
+        
+        // Event listeners
         document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.onclick = () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.view).classList.add('active');
-                
-                if (tab.dataset.view === 'network') {
-                    setTimeout(drawNetwork, 100);
-                } else if (tab.dataset.view === 'analytics') {
-                    setTimeout(() => {
-                        drawFrequencyChart();
-                        generateWordCloud();
-                    }, 100);
-                }
-            });
+            };
         });
-
-        document.querySelectorAll('.entity-category h3').forEach(header => {
-            header.addEventListener('click', () => {
-                header.parentElement.classList.toggle('expanded');
-                header.textContent = header.textContent.startsWith('▶') ? '▼' + header.textContent.substring(1) : '▶' + header.textContent.substring(1);
-            });
-        });
-
-        function renderTimeline(reports) {
-            const timelineContent = document.getElementById('timelineContent');
-            if (reports.length === 0) {
-                timelineContent.innerHTML = '<div class="loading">No reports match your search. *purrs in empty void*</div>';
-                return;
+        
+        document.querySelector('.modal-close').onclick = () => {
+            document.getElementById('reportModal').classList.remove('active');
+        };
+        
+        window.onclick = (e) => {
+            if (e.target.id === 'reportModal') {
+                document.getElementById('reportModal').classList.remove('active');
             }
-            
-            timelineContent.innerHTML = reports.map(report => `
-                <div class="timeline-item" data-id="${report.id}">
-                    <div class="timeline-date">${report.date} | ID: ${report.id}</div>
+        };
+        
+        document.getElementById('searchInput').oninput = filterReports;
+        document.getElementById('themeFilter').onchange = filterReports;
+        document.getElementById('refreshData').onclick = loadReports;
+        
+        // Initialize
+        console.log('🐈‍⬛ Void Atlas initializing...');
+        loadReports();
+    </script>
+</body>
+</html>
