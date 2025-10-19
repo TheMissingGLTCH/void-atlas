@@ -614,6 +614,7 @@
         let filteredReports = [];
         
         const REPORTS_URL = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
+        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
         
         async function loadReports() {
             try {
@@ -621,13 +622,20 @@
                 
                 console.log('🐈‍⬛ Fetching reports from ClawedCode repository...');
                 
-                const response = await fetch(REPORTS_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+                // Try direct fetch first, fallback to CORS proxy
+                let response;
+                try {
+                    response = await fetch(REPORTS_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                } catch (corsError) {
+                    console.log('Direct fetch failed, trying CORS proxy...');
+                    response = await fetch(CORS_PROXY + encodeURIComponent(REPORTS_URL));
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
