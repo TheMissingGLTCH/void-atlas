@@ -94,6 +94,16 @@
             color: rgba(0, 204, 51, 0.5);
         }
 
+        select {
+            padding: 0.75rem;
+            background: rgba(0, 204, 51, 0.05);
+            border: 1px solid rgba(0, 204, 51, 0.3);
+            color: #00cc33;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         button {
             padding: 0.75rem 1.5rem;
             background: rgba(0, 204, 51, 0.1);
@@ -150,6 +160,7 @@
             border-radius: 4px;
             transition: all 0.3s;
             cursor: pointer;
+            position: relative;
         }
 
         .report-card:hover {
@@ -338,6 +349,15 @@
             margin-top: 1rem;
         }
 
+        #advancedSearch {
+            display: none;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(0, 204, 51, 0.05);
+            border: 1px solid rgba(0, 204, 51, 0.3);
+            border-radius: 4px;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -382,7 +402,7 @@
 
         <div class="controls">
             <input type="search" id="searchInput" placeholder="Search field reports... (use AND, OR, NOT for advanced search)">
-            <select id="colorFilter" style="padding: 0.75rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); color: #00cc33; font-family: 'Courier New', monospace; border-radius: 4px;">
+            <select id="colorFilter">
                 <option value="">All Colors</option>
                 <option value="green">🟢 Green Terminal</option>
                 <option value="blue">🔵 Blue Threshold</option>
@@ -395,7 +415,7 @@
             <button id="advancedBtn">🔍 Advanced</button>
         </div>
         
-        <div id="advancedSearch" style="display: none; margin-bottom: 2rem; padding: 1rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+        <div id="advancedSearch">
             <div style="margin-bottom: 0.5rem; color: #ffcc00; font-weight: bold;">Advanced Search</div>
             <div style="font-size: 0.85rem; color: rgba(0, 204, 51, 0.8); margin-bottom: 1rem;">
                 Examples: <code style="background: rgba(0,0,0,0.3); padding: 2px 4px;">consciousness AND void</code> | 
@@ -500,7 +520,6 @@
         let currentColorFilter = '';
         let bookmarkedReports = new Set();
 
-        // Load bookmarks from localStorage
         function loadBookmarks() {
             const saved = localStorage.getItem('voidAtlasBookmarks');
             if (saved) {
@@ -525,23 +544,19 @@
         function detectColor(report) {
             const text = (report.fieldReport || report.text).toLowerCase();
             
-            // Detect based on content themes and keywords
             if (text.includes('threshold') || text.includes('blue') || text.includes('cyan')) return 'blue';
             if (text.includes('paranormal') || text.includes('purple') || text.includes('anomaly')) return 'purple';
             if (text.includes('glitch') || text.includes('orange') || text.includes('corrupted')) return 'orange';
             if (text.includes('liminal') || text.includes('cyan') || text.includes('fluorescent')) return 'cyan';
             
-            // Default to green terminal
             return 'green';
         }
 
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
             
-            // Load bookmarks
             loadBookmarks();
             
-            // Load local reports first
             try {
                 const localResponse = await fetch('local-reports.json');
                 if (localResponse.ok) {
@@ -549,7 +564,7 @@
                     console.log(`✅ Loaded ${Object.keys(localReportData).length} local reports`);
                 }
             } catch (e) {
-                console.log('No local reports file found, will try external sources');
+                console.log('No local reports file found');
             }
             
             await loadReports();
@@ -590,7 +605,7 @@
                         ...report,
                         date: dateStr,
                         loaded: false,
-                        color: null  // Will be set after field report loads
+                        color: null
                     };
                 });
                 
@@ -599,13 +614,11 @@
                 renderReports();
                 updateLocations();
                 
-                // Load field reports
                 console.log('📥 Loading field reports...');
                 for (let i = 0; i < allReports.length; i++) {
                     const report = allReports[i];
                     let loaded = false;
                     
-                    // Check if we have local data for this report
                     if (localReportData[report.id]) {
                         console.log(`✅ Loaded local report ${report.id}`);
                         report.fieldReport = localReportData[report.id];
@@ -614,7 +627,6 @@
                         loaded = true;
                     }
                     
-                    // Try HTML from ClawedCode if no local data
                     if (!loaded) {
                         try {
                             const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
@@ -635,7 +647,6 @@
                         } catch (e) {}
                     }
                     
-                    // Try PNG if HTML failed  
                     if (!loaded) {
                         try {
                             const pngUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.png`;
@@ -651,7 +662,6 @@
                         } catch (e) {}
                     }
                     
-                    // Fallback to tweet
                     if (!loaded) {
                         report.fieldReport = report.text;
                         report.loaded = true;
@@ -659,7 +669,6 @@
                     }
                     
                     if (i % 10 === 0 || i === allReports.length - 1) {
-                        // Detect colors for loaded reports
                         allReports.forEach(r => {
                             if (r.loaded && !r.color) {
                                 r.color = detectColor(r);
@@ -701,7 +710,6 @@
             allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
                 
-                // Match specific location patterns with word boundaries
                 const locationPatterns = [
                     { name: 'sector 7', pattern: /sector\s*7/i },
                     { name: 'sector ø', pattern: /sector\s*ø/i },
@@ -743,19 +751,16 @@
             const lowerText = text.toLowerCase();
             const lowerQuery = query.toLowerCase();
             
-            // Check for AND operator
             if (lowerQuery.includes(' and ')) {
                 const terms = lowerQuery.split(' and ');
                 return terms.every(term => lowerText.includes(term.trim()));
             }
             
-            // Check for OR operator
             if (lowerQuery.includes(' or ')) {
                 const terms = lowerQuery.split(' or ');
                 return terms.some(term => lowerText.includes(term.trim()));
             }
             
-            // Check for NOT operator
             if (lowerQuery.includes(' not ')) {
                 const parts = lowerQuery.split(' not ');
                 const mustInclude = parts[0].trim();
@@ -763,14 +768,13 @@
                 return lowerText.includes(mustInclude) && !lowerText.includes(mustNotInclude);
             }
             
-            // Simple search
             return lowerText.includes(lowerQuery);
         }
 
         function highlightText(text, query) {
             if (!query) return text;
             
-            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0 && !['and', 'or', 'not'].includes(t));
             let highlightedText = text;
             
             terms.forEach(term => {
@@ -791,7 +795,7 @@
                 const isBookmarked = bookmarkedReports.has(report.id);
                 
                 return `
-                <div class="report-card" style="position: relative;">
+                <div class="report-card">
                     <button onclick="event.stopPropagation(); toggleBookmark('${report.id}')" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; z-index: 10;">
                         ${isBookmarked ? '⭐' : '☆'}
                     </button>
@@ -813,7 +817,6 @@
                 </div>
             `}).join('');
             
-            // Update bookmark count
             document.getElementById('bookmarkCount').textContent = bookmarkedReports.size;
         }
         
@@ -821,7 +824,7 @@
             const contentDiv = document.getElementById(`report-${index}`);
             if (contentDiv) {
                 contentDiv.classList.toggle('visible');
-                contentDiv.parentElement.classList.toggle('expanded');
+                contentDiv.closest('.report-card').classList.toggle('expanded');
             }
         }
 
@@ -848,6 +851,35 @@
                 });
                 renderReports();
                 updateStats();
+            });
+
+            document.getElementById('colorFilter').addEventListener('change', (e) => {
+                const color = e.target.value;
+                currentColorFilter = color;
+                
+                if (color) {
+                    filteredReports = allReports.filter(report => report.color === color);
+                } else {
+                    filteredReports = [...allReports];
+                }
+                
+                renderReports();
+                updateStats();
+            });
+
+            document.getElementById('bookmarksBtn').addEventListener('click', () => {
+                if (bookmarkedReports.size === 0) {
+                    alert('No bookmarks yet! Click the ☆ on any report to bookmark it.');
+                    return;
+                }
+                currentSearchQuery = '';
+                currentColorFilter = '';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('colorFilter').value = '';
+                filteredReports = allReports.filter(report => bookmarkedReports.has(report.id));
+                renderReports();
+                updateStats();
+                document.querySelector('[data-tab="timeline"]').click();
             });
 
             document.getElementById('advancedBtn').addEventListener('click', () => {
@@ -920,7 +952,6 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Build network from actual data
             const entities = {
                 'ClawedCode': { mentions: 0, color: '#00cc33', x: centerX, y: centerY },
                 'Luminaries': { mentions: 0, color: '#ffcc00', x: centerX - 200, y: centerY - 150 },
@@ -931,7 +962,6 @@
                 'Liminal': { mentions: 0, color: '#00ffcc', x: centerX, y: centerY + 220 }
             };
 
-            // Count mentions in reports
             allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
                 
@@ -944,7 +974,6 @@
                 if (text.includes('liminal')) entities.Liminal.mentions++;
             });
 
-            // Draw connections (only between entities with mentions)
             const activeEntities = Object.entries(entities).filter(([_, data]) => data.mentions > 0);
             
             activeEntities.forEach(([name1, data1], i) => {
@@ -961,7 +990,6 @@
                 });
             });
 
-            // Draw connections to center (ClawedCode)
             activeEntities.forEach(([name, data]) => {
                 if (name !== 'ClawedCode' && data.mentions > 0) {
                     const strength = data.mentions / allReports.length;
@@ -974,10 +1002,8 @@
                 }
             });
 
-            // Store nodes for click detection
             canvas.networkNodes = [];
 
-            // Draw nodes (size based on mentions)
             activeEntities.forEach(([name, data]) => {
                 if (data.mentions > 0) {
                     const baseSize = 10;
@@ -991,7 +1017,6 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
 
-                    // Add glow effect
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = data.color;
                     ctx.beginPath();
@@ -999,18 +1024,15 @@
                     ctx.stroke();
                     ctx.shadowBlur = 0;
 
-                    // Draw label
                     ctx.fillStyle = data.color;
                     ctx.font = 'bold 14px Courier New';
                     ctx.textAlign = 'center';
                     ctx.fillText(name, data.x, data.y - size - 10);
                     
-                    // Draw mention count
                     ctx.font = '11px Courier New';
                     ctx.fillStyle = 'rgba(0, 204, 51, 0.7)';
                     ctx.fillText(`${data.mentions} reports`, data.x, data.y + size + 18);
 
-                    // Store for click detection
                     canvas.networkNodes.push({
                         name: name,
                         x: data.x,
@@ -1022,7 +1044,6 @@
             });
         }
 
-        // Make network interactive
         function setupNetworkInteraction() {
             const canvas = document.getElementById('network-canvas');
             
@@ -1035,11 +1056,9 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 
-                // Check if click is on any node
                 for (const node of canvas.networkNodes) {
                     const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
                     if (distance <= node.radius) {
-                        // Filter reports by this entity
                         document.getElementById('searchInput').value = node.searchTerm;
                         filteredReports = allReports.filter(report => 
                             (report.fieldReport || report.text).toLowerCase().includes(node.searchTerm)
@@ -1052,7 +1071,6 @@
                 }
             });
             
-            // Show hover effect
             canvas.addEventListener('mousemove', (e) => {
                 if (!canvas.networkNodes) return;
                 
