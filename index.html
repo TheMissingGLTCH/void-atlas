@@ -33,6 +33,7 @@
         .timeline-item:hover { transform: translateX(10px); box-shadow: -5px 5px 20px rgba(0, 255, 65, 0.3); }
         .timeline-date { color: #00cc33; font-size: 0.9em; margin-bottom: 8px; }
         .timeline-text { color: #00ff41; line-height: 1.6; }
+        .timeline-tweet { color: #00cc33; font-size: 0.9em; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px solid #00ff4133; }
         .location-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
         .location-card { background: #1a1e24; border: 1px solid #00ff41; padding: 15px; cursor: pointer; transition: all 0.3s; }
         .location-card:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); }
@@ -119,25 +120,27 @@
     <script>
         let allReports = [];
         let filteredReports = [];
-        const REPORTS_URL = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
+        const BASE_URL = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main';
         
         async function loadReports() {
             try {
                 showLoading();
-                console.log('🐈‍⬛ Fetching from:', REPORTS_URL);
+                console.log('🐈‍⬛ Fetching reports index...');
                 
-                const response = await fetch(REPORTS_URL);
-                
+                const response = await fetch(`${BASE_URL}/reports.json`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
-                const data = await response.json();
-                console.log('✅ Received', data.length, 'reports');
+                const index = await response.json();
+                console.log(`✅ Found ${index.length} reports`);
                 
-                allReports = data.map(r => ({
-                    id: r.id,
-                    date: r.createdAt.split('T')[0],
-                    text: r.text,
-                    timestamp: r.createdAt
+                // Transform data - extract content from each HTML file
+                allReports = index.map(item => ({
+                    id: item.id,
+                    date: item.createdAt.split('T')[0],
+                    tweet: item.text,
+                    text: "Loading field report...", // Will be populated
+                    timestamp: item.createdAt,
+                    htmlFile: `${BASE_URL}/reports/${item.id}.html`
                 }));
                 
                 allReports.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -148,10 +151,40 @@
                 renderTimeline(filteredReports);
                 updateLocations();
                 
+                // Load actual field reports in background
+                loadFieldReports();
+                
             } catch (error) {
                 console.error('❌ Error:', error);
                 showError(error.message);
             }
+        }
+        
+        async function loadFieldReports() {
+            console.log('📝 Loading field report content...');
+            let loaded = 0;
+            
+            for (const report of allReports) {
+                try {
+                    const response = await fetch(report.htmlFile);
+                    if (response.ok) {
+                        const html = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const content = doc.querySelector('.content');
+                        if (content) {
+                            report.text = content.textContent.trim();
+                            loaded++;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Failed to load report ${report.id}:`, e);
+                }
+            }
+            
+            console.log(`✅ Loaded ${loaded}/${allReports.length} field reports`);
+            renderTimeline(filteredReports); // Re-render with actual content
+            updateLocations(); // Re-analyze with actual content
         }
         
         function showLoading() {
@@ -187,7 +220,7 @@
         }
         
         function updateLocations() {
-            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi];
+            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi, /liminal/gi];
             const counts = {};
             
             allReports.forEach(r => {
@@ -226,7 +259,8 @@
             content.innerHTML = reports.map(r => `
                 <div class="timeline-item" data-id="${r.id}">
                     <div class="timeline-date">${r.date} | ID: ${r.id}</div>
-                    <div class="timeline-text">${r.text}</div>
+                    <div class="timeline-text">${r.text.substring(0, 300)}${r.text.length > 300 ? '...' : ''}</div>
+                    <div class="timeline-tweet">Tweet: ${r.tweet.substring(0, 150)}...</div>
                 </div>
             `).join('');
             
@@ -244,7 +278,8 @@
                 <h2 style="color: #00ff41; margin-bottom: 20px;">Field Report</h2>
                 <p style="color: #00cc33; margin-bottom: 15px;"><strong>Date:</strong> ${report.date}</p>
                 <p style="color: #00cc33; margin-bottom: 15px;"><strong>ID:</strong> ${report.id}</p>
-                <div style="color: #00ff41; line-height: 1.8; white-space: pre-wrap;">${report.text}</div>
+                <p style="color: #00cc33; margin-bottom: 15px; font-style: italic;"><strong>Tweet:</strong> ${report.tweet}</p>
+                <div style="color: #00ff41; line-height: 1.8; white-space: pre-wrap; margin-top: 20px; padding-top: 20px; border-top: 1px solid #00ff41;">${report.text}</div>
             `;
             modal.classList.add('active');
         }
@@ -254,7 +289,7 @@
             const theme = document.getElementById('themeFilter').value;
             
             filteredReports = allReports.filter(r => {
-                const matchSearch = !search || r.text.toLowerCase().includes(search);
+                const matchSearch = !search || r.text.toLowerCase().includes(search) || r.tweet.toLowerCase().includes(search);
                 const matchTheme = theme === 'all' || r.text.toLowerCase().includes(theme);
                 return matchSearch && matchTheme;
             });
@@ -263,7 +298,6 @@
             updateStats();
         }
         
-        // Event listeners
         document.querySelectorAll('.tab').forEach(tab => {
             tab.onclick = () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -287,7 +321,6 @@
         document.getElementById('themeFilter').onchange = filterReports;
         document.getElementById('refreshData').onclick = loadReports;
         
-        // Initialize
         console.log('🐈‍⬛ Void Atlas initializing...');
         loadReports();
     </script>
