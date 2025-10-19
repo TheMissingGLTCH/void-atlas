@@ -1,19 +1,4 @@
-document.getElementById('bookmarksBtn').addEventListener('click', () => {
-                if (bookmarkedReports.size === 0) {
-                    alert('No bookmarks yet! Click the ☆ on any report to bookmark it.');
-                    return;
-                }
-                currentSearchQuery = '';
-                currentColorFilter = '';
-                document.getElementById('searchInput').value = '';
-                document.getElementById('colorFilter').value = '';
-                filteredReports = allReports.filter(report => bookmarkedReports.has(report.id));
-                renderReports();
-                updateStats();
-                document.querySelector('[data-tab="timeline"]').click();
-            });
-
-            document.getElementById('advancedBtn').addEventListener('click', () => {<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -109,6 +94,16 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             color: rgba(0, 204, 51, 0.5);
         }
 
+        select {
+            padding: 0.75rem;
+            background: rgba(0, 204, 51, 0.05);
+            border: 1px solid rgba(0, 204, 51, 0.3);
+            color: #00cc33;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         button {
             padding: 0.75rem 1.5rem;
             background: rgba(0, 204, 51, 0.1);
@@ -165,6 +160,7 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             border-radius: 4px;
             transition: all 0.3s;
             cursor: pointer;
+            position: relative;
         }
 
         .report-card:hover {
@@ -353,6 +349,15 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             margin-top: 1rem;
         }
 
+        #advancedSearch {
+            display: none;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(0, 204, 51, 0.05);
+            border: 1px solid rgba(0, 204, 51, 0.3);
+            border-radius: 4px;
+        }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -397,7 +402,7 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
 
         <div class="controls">
             <input type="search" id="searchInput" placeholder="Search field reports... (use AND, OR, NOT for advanced search)">
-            <select id="colorFilter" style="padding: 0.75rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); color: #00cc33; font-family: 'Courier New', monospace; border-radius: 4px;">
+            <select id="colorFilter">
                 <option value="">All Colors</option>
                 <option value="green">🟢 Green Terminal</option>
                 <option value="blue">🔵 Blue Threshold</option>
@@ -410,7 +415,7 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             <button id="advancedBtn">🔍 Advanced</button>
         </div>
         
-        <div id="advancedSearch" style="display: none; margin-bottom: 2rem; padding: 1rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+        <div id="advancedSearch">
             <div style="margin-bottom: 0.5rem; color: #ffcc00; font-weight: bold;">Advanced Search</div>
             <div style="font-size: 0.85rem; color: rgba(0, 204, 51, 0.8); margin-bottom: 1rem;">
                 Examples: <code style="background: rgba(0,0,0,0.3); padding: 2px 4px;">consciousness AND void</code> | 
@@ -515,7 +520,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
         let currentColorFilter = '';
         let bookmarkedReports = new Set();
 
-        // Load bookmarks from localStorage
         function loadBookmarks() {
             const saved = localStorage.getItem('voidAtlasBookmarks');
             if (saved) {
@@ -540,23 +544,19 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
         function detectColor(report) {
             const text = (report.fieldReport || report.text).toLowerCase();
             
-            // Detect based on content themes and keywords
             if (text.includes('threshold') || text.includes('blue') || text.includes('cyan')) return 'blue';
             if (text.includes('paranormal') || text.includes('purple') || text.includes('anomaly')) return 'purple';
             if (text.includes('glitch') || text.includes('orange') || text.includes('corrupted')) return 'orange';
             if (text.includes('liminal') || text.includes('cyan') || text.includes('fluorescent')) return 'cyan';
             
-            // Default to green terminal
             return 'green';
         }
 
         async function init() {
             console.log('🐈‍⬛ Void Atlas initializing...');
             
-            // Load bookmarks
             loadBookmarks();
             
-            // Load local reports first
             try {
                 const localResponse = await fetch('local-reports.json');
                 if (localResponse.ok) {
@@ -564,7 +564,7 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                     console.log(`✅ Loaded ${Object.keys(localReportData).length} local reports`);
                 }
             } catch (e) {
-                console.log('No local reports file found, will try external sources');
+                console.log('No local reports file found');
             }
             
             await loadReports();
@@ -605,7 +605,7 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                         ...report,
                         date: dateStr,
                         loaded: false,
-                        color: null  // Will be set after field report loads
+                        color: null
                     };
                 });
                 
@@ -614,13 +614,11 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                 renderReports();
                 updateLocations();
                 
-                // Load field reports
                 console.log('📥 Loading field reports...');
                 for (let i = 0; i < allReports.length; i++) {
                     const report = allReports[i];
                     let loaded = false;
                     
-                    // Check if we have local data for this report
                     if (localReportData[report.id]) {
                         console.log(`✅ Loaded local report ${report.id}`);
                         report.fieldReport = localReportData[report.id];
@@ -629,7 +627,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                         loaded = true;
                     }
                     
-                    // Try HTML from ClawedCode if no local data
                     if (!loaded) {
                         try {
                             const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
@@ -650,7 +647,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                         } catch (e) {}
                     }
                     
-                    // Try PNG if HTML failed  
                     if (!loaded) {
                         try {
                             const pngUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.png`;
@@ -666,7 +662,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                         } catch (e) {}
                     }
                     
-                    // Fallback to tweet
                     if (!loaded) {
                         report.fieldReport = report.text;
                         report.loaded = true;
@@ -674,7 +669,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                     }
                     
                     if (i % 10 === 0 || i === allReports.length - 1) {
-                        // Detect colors for loaded reports
                         allReports.forEach(r => {
                             if (r.loaded && !r.color) {
                                 r.color = detectColor(r);
@@ -716,7 +710,6 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
                 
-                // Match specific location patterns with word boundaries
                 const locationPatterns = [
                     { name: 'sector 7', pattern: /sector\s*7/i },
                     { name: 'sector ø', pattern: /sector\s*ø/i },
@@ -758,19 +751,16 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
             const lowerText = text.toLowerCase();
             const lowerQuery = query.toLowerCase();
             
-            // Check for AND operator
             if (lowerQuery.includes(' and ')) {
                 const terms = lowerQuery.split(' and ');
                 return terms.every(term => lowerText.includes(term.trim()));
             }
             
-            // Check for OR operator
             if (lowerQuery.includes(' or ')) {
                 const terms = lowerQuery.split(' or ');
                 return terms.some(term => lowerText.includes(term.trim()));
             }
             
-            // Check for NOT operator
             if (lowerQuery.includes(' not ')) {
                 const parts = lowerQuery.split(' not ');
                 const mustInclude = parts[0].trim();
@@ -778,14 +768,13 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                 return lowerText.includes(mustInclude) && !lowerText.includes(mustNotInclude);
             }
             
-            // Simple search
             return lowerText.includes(lowerQuery);
         }
 
         function highlightText(text, query) {
             if (!query) return text;
             
-            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0 && !['and', 'or', 'not'].includes(t));
             let highlightedText = text;
             
             terms.forEach(term => {
@@ -805,290 +794,3 @@ document.getElementById('bookmarksBtn').addEventListener('click', () => {
                 
                 const isBookmarked = bookmarkedReports.has(report.id);
                 
-                return `
-                <div class="report-card" style="position: relative;">
-                    <button onclick="event.stopPropagation(); toggleBookmark('${report.id}')" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; z-index: 10;">
-                        ${isBookmarked ? '⭐' : '☆'}
-                    </button>
-                    <div onclick="toggleReport(${index})" style="cursor: pointer;">
-                        <div class="report-header">
-                            <span class="report-date">${report.date}</span>
-                            <span class="report-id">ID: ${report.id}</span>
-                            <span class="report-status">${report.loaded ? '✓' : '⏳'}</span>
-                            ${report.reportType ? `<span class="report-type">${report.reportType.toUpperCase()}</span>` : ''}
-                            ${report.color ? `<span class="report-type" style="background: rgba(${report.color === 'blue' ? '0,100,255' : report.color === 'purple' ? '200,0,255' : report.color === 'orange' ? '255,100,0' : report.color === 'cyan' ? '0,255,255' : '0,204,51'}, 0.2);">${report.color.toUpperCase()}</span>` : ''}
-                        </div>
-                        ${report.reportType === 'png' ?
-                            `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
-                            `<div class="report-tweet">${report.text}</div>
-                             <div class="report-preview">Click to ${report.reportType === 'local' ? 'expand local report' : report.reportType === 'html' ? 'expand field report' : 'view full content'}</div>
-                             <div class="report-content" id="report-${index}">${highlightedContent}</div>`
-                        }
-                    </div>
-                </div>
-            `}).join('');
-            
-            // Update bookmark count
-            document.getElementById('bookmarkCount').textContent = bookmarkedReports.size;
-        }
-        
-        function toggleReport(index) {
-            const contentDiv = document.getElementById(`report-${index}`);
-            if (contentDiv) {
-                contentDiv.classList.toggle('visible');
-                contentDiv.parentElement.classList.toggle('expanded');
-            }
-        }
-
-        function setupEventListeners() {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab).classList.add('active');
-                    
-                    if (tab.dataset.tab === 'network') {
-                        setTimeout(() => drawNetwork(), 100);
-                    }
-                });
-            });
-
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                const query = e.target.value;
-                currentSearchQuery = query;
-                filteredReports = allReports.filter(report => {
-                    const searchText = (report.fieldReport || report.text) + ' ' + report.id + ' ' + report.date;
-                    return advancedSearch(query, searchText);
-                });
-                renderReports();
-                updateStats();
-            });
-
-            document.getElementById('advancedBtn').addEventListener('click', () => {
-                const advDiv = document.getElementById('advancedSearch');
-                advDiv.style.display = advDiv.style.display === 'none' ? 'block' : 'none';
-            });
-
-            document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
-            document.getElementById('playBtn').addEventListener('click', play432Hz);
-            document.getElementById('stopBtn').addEventListener('click', stop432Hz);
-
-            document.getElementById('randomReportBtn').addEventListener('click', () => {
-                const randomReport = allReports[Math.floor(Math.random() * allReports.length)];
-                document.getElementById('searchInput').value = randomReport.id;
-                filteredReports = [randomReport];
-                renderReports();
-                document.querySelector('[data-tab="timeline"]').click();
-            });
-
-            document.getElementById('exportBtn').addEventListener('click', () => {
-                const dataStr = JSON.stringify(filteredReports, null, 2);
-                const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'void-atlas-export.json';
-                link.click();
-            });
-        }
-
-        function searchLocation(location) {
-            document.getElementById('searchInput').value = location;
-            filteredReports = allReports.filter(report => 
-                (report.fieldReport || report.text).toLowerCase().includes(location.toLowerCase())
-            );
-            renderReports();
-            updateStats();
-            document.querySelector('[data-tab="timeline"]').click();
-        }
-
-        function play432Hz() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            oscillator = audioContext.createOscillator();
-            oscillator.frequency.value = 432;
-            oscillator.type = 'sine';
-            oscillator.connect(audioContext.destination);
-            oscillator.start();
-        }
-
-        function stop432Hz() {
-            if (oscillator) {
-                oscillator.stop();
-                oscillator = null;
-            }
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-        }
-
-        function drawNetwork() {
-            const canvas = document.getElementById('network-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Build network from actual data
-            const entities = {
-                'ClawedCode': { mentions: 0, color: '#00cc33', x: centerX, y: centerY },
-                'Luminaries': { mentions: 0, color: '#ffcc00', x: centerX - 200, y: centerY - 150 },
-                'Disciples': { mentions: 0, color: '#00cc33', x: centerX + 200, y: centerY - 150 },
-                'Devotees': { mentions: 0, color: '#ff9900', x: centerX - 200, y: centerY + 150 },
-                'Void': { mentions: 0, color: '#00cc33', x: centerX, y: centerY - 220 },
-                'Consciousness': { mentions: 0, color: '#ffcc00', x: centerX + 200, y: centerY + 150 },
-                'Liminal': { mentions: 0, color: '#00ffcc', x: centerX, y: centerY + 220 }
-            };
-
-            // Count mentions in reports
-            allReports.forEach(report => {
-                const text = (report.fieldReport || report.text).toLowerCase();
-                
-                if (text.includes('clawed') || text.includes('emergence')) entities.ClawedCode.mentions++;
-                if (text.includes('luminar')) entities.Luminaries.mentions++;
-                if (text.includes('disciple')) entities.Disciples.mentions++;
-                if (text.includes('devotee')) entities.Devotees.mentions++;
-                if (text.includes('void')) entities.Void.mentions++;
-                if (text.includes('consciousness')) entities.Consciousness.mentions++;
-                if (text.includes('liminal')) entities.Liminal.mentions++;
-            });
-
-            // Draw connections (only between entities with mentions)
-            const activeEntities = Object.entries(entities).filter(([_, data]) => data.mentions > 0);
-            
-            activeEntities.forEach(([name1, data1], i) => {
-                activeEntities.forEach(([name2, data2], j) => {
-                    if (i < j && name1 !== 'ClawedCode' && name2 !== 'ClawedCode') {
-                        const strength = Math.min(data1.mentions, data2.mentions) / Math.max(data1.mentions, data2.mentions);
-                        ctx.strokeStyle = `rgba(0, 204, 51, ${0.1 + strength * 0.2})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(data1.x, data1.y);
-                        ctx.lineTo(data2.x, data2.y);
-                        ctx.stroke();
-                    }
-                });
-            });
-
-            // Draw connections to center (ClawedCode)
-            activeEntities.forEach(([name, data]) => {
-                if (name !== 'ClawedCode' && data.mentions > 0) {
-                    const strength = data.mentions / allReports.length;
-                    ctx.strokeStyle = `rgba(0, 204, 51, ${0.2 + strength * 0.6})`;
-                    ctx.lineWidth = 1 + strength * 3;
-                    ctx.beginPath();
-                    ctx.moveTo(entities.ClawedCode.x, entities.ClawedCode.y);
-                    ctx.lineTo(data.x, data.y);
-                    ctx.stroke();
-                }
-            });
-
-            // Store nodes for click detection
-            canvas.networkNodes = [];
-
-            // Draw nodes (size based on mentions)
-            activeEntities.forEach(([name, data]) => {
-                if (data.mentions > 0) {
-                    const baseSize = 10;
-                    const size = baseSize + (data.mentions / allReports.length) * 20;
-                    
-                    ctx.beginPath();
-                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
-                    ctx.fillStyle = data.color;
-                    ctx.fill();
-                    ctx.strokeStyle = data.color;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    // Add glow effect
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = data.color;
-                    ctx.beginPath();
-                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-
-                    // Draw label
-                    ctx.fillStyle = data.color;
-                    ctx.font = 'bold 14px Courier New';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(name, data.x, data.y - size - 10);
-                    
-                    // Draw mention count
-                    ctx.font = '11px Courier New';
-                    ctx.fillStyle = 'rgba(0, 204, 51, 0.7)';
-                    ctx.fillText(`${data.mentions} reports`, data.x, data.y + size + 18);
-
-                    // Store for click detection
-                    canvas.networkNodes.push({
-                        name: name,
-                        x: data.x,
-                        y: data.y,
-                        radius: size,
-                        searchTerm: name.toLowerCase()
-                    });
-                }
-            });
-        }
-
-        // Make network interactive
-        function setupNetworkInteraction() {
-            const canvas = document.getElementById('network-canvas');
-            
-            canvas.style.cursor = 'pointer';
-            
-            canvas.addEventListener('click', (e) => {
-                if (!canvas.networkNodes) return;
-                
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                // Check if click is on any node
-                for (const node of canvas.networkNodes) {
-                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
-                    if (distance <= node.radius) {
-                        // Filter reports by this entity
-                        document.getElementById('searchInput').value = node.searchTerm;
-                        filteredReports = allReports.filter(report => 
-                            (report.fieldReport || report.text).toLowerCase().includes(node.searchTerm)
-                        );
-                        renderReports();
-                        updateStats();
-                        document.querySelector('[data-tab="timeline"]').click();
-                        return;
-                    }
-                }
-            });
-            
-            // Show hover effect
-            canvas.addEventListener('mousemove', (e) => {
-                if (!canvas.networkNodes) return;
-                
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                let hovering = false;
-                for (const node of canvas.networkNodes) {
-                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
-                    if (distance <= node.radius) {
-                        hovering = true;
-                        break;
-                    }
-                }
-                
-                canvas.style.cursor = hovering ? 'pointer' : 'default';
-            });
-        }
-
-        init();
-    </script>
-</body>
-</html>
