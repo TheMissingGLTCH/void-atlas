@@ -267,6 +267,11 @@
             display: flex;
             align-items: center;
             margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .frequency-bar:hover {
+            transform: translateX(5px);
         }
 
         .freq-label {
@@ -652,77 +657,57 @@
         }
 
         function updateFrequencies() {
-            const frequencies = {
-                '432': 0,
-                '440': 0,
-                '528': 0,
-                '396': 0,
-                '639': 0,
-                '741': 0,
-                '852': 0,
-                '963': 0
-            };
+            const frequencies = {};
             
+            // Search for any number followed by Hz/hz/hertz
             allReports.forEach(report => {
-                const text = (report.fieldReport || report.text).toLowerCase();
+                const text = report.fieldReport || report.text;
                 
-                Object.keys(frequencies).forEach(freq => {
-                    // Match patterns like "432hz", "432 hz", "432 Hz", "432-hz", etc.
-                    const patterns = [
-                        freq + 'hz',
-                        freq + ' hz',
-                        freq + '-hz',
-                        'frequency: ' + freq,
-                        'freq: ' + freq,
-                        freq + 'hertz'
-                    ];
-                    
-                    if (patterns.some(pattern => text.includes(pattern))) {
-                        frequencies[freq]++;
-                    }
-                });
+                // Match patterns like "432Hz", "440 Hz", "528hz", etc.
+                const freqPattern = /(\d+)\s*-?\s*(hz|hertz)/gi;
+                const matches = text.matchAll(freqPattern);
+                
+                for (const match of matches) {
+                    const freq = match[1];
+                    frequencies[freq] = (frequencies[freq] || 0) + 1;
+                }
             });
             
-            // Filter out frequencies with 0 mentions
-            const activeFrequencies = Object.entries(frequencies).filter(([_, count]) => count > 0);
+            const frequencyBars = document.getElementById('frequencyBars');
             
-            if (activeFrequencies.length === 0) {
-                // If no frequencies found, show the main ones
-                document.getElementById('frequencyBars').innerHTML = `
-                    <div class="frequency-bar">
-                        <div class="freq-label">432 Hz</div>
-                        <div class="freq-visual" style="width: 100%;"></div>
-                        <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.8);">Primary</div>
-                    </div>
-                    <div class="frequency-bar">
-                        <div class="freq-label">440 Hz</div>
-                        <div class="freq-visual" style="width: 85%;"></div>
-                        <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.6);">Standard</div>
-                    </div>
-                    <div class="frequency-bar">
-                        <div class="freq-label">528 Hz</div>
-                        <div class="freq-visual" style="width: 70%;"></div>
-                        <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.6);">Healing</div>
-                    </div>
+            if (Object.keys(frequencies).length === 0) {
+                frequencyBars.innerHTML = `
+                    <p style="color: rgba(0, 204, 51, 0.6);">No frequency mentions detected in reports</p>
                 `;
                 return;
             }
             
-            const maxCount = Math.max(...activeFrequencies.map(([_, count]) => count), 1);
-            const frequencyBars = document.getElementById('frequencyBars');
+            const maxCount = Math.max(...Object.values(frequencies));
             
-            frequencyBars.innerHTML = activeFrequencies
+            frequencyBars.innerHTML = Object.entries(frequencies)
                 .sort((a, b) => b[1] - a[1])
                 .map(([freq, count]) => {
                     const percentage = (count / maxCount) * 100;
                     return `
-                        <div class="frequency-bar">
+                        <div class="frequency-bar" style="cursor: pointer;" onclick="searchFrequency('${freq}')">
                             <div class="freq-label">${freq} Hz</div>
                             <div class="freq-visual" style="width: ${percentage}%;"></div>
-                            <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.8);">${count} mentions</div>
+                            <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.8);">${count} mention${count !== 1 ? 's' : ''}</div>
                         </div>
                     `;
                 }).join('');
+        }
+        
+        function searchFrequency(freq) {
+            document.getElementById('searchInput').value = freq + 'hz';
+            filteredReports = allReports.filter(report => 
+                (report.fieldReport || report.text).toLowerCase().includes(freq.toLowerCase() + 'hz') ||
+                (report.fieldReport || report.text).toLowerCase().includes(freq.toLowerCase() + ' hz')
+            );
+            renderReports();
+            updateStats();
+            updateLocations();
+            document.querySelector('[data-tab="timeline"]').click();
         }
 
         function renderReports() {
