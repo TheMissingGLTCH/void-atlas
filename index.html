@@ -358,6 +358,56 @@
             border-radius: 4px;
         }
 
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 204, 51, 0.05);
+            border: 1px solid rgba(0, 204, 51, 0.3);
+            color: #00cc33;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: rgba(0, 204, 51, 0.2);
+            border-color: #00cc33;
+            box-shadow: 0 0 10px rgba(0, 204, 51, 0.3);
+        }
+
+        .filter-btn:hover {
+            background: rgba(0, 204, 51, 0.15);
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid rgba(0, 204, 51, 0.1);
+            transition: all 0.2s;
+        }
+
+        table tbody tr:hover {
+            background: rgba(0, 204, 51, 0.05);
+        }
+
+        table tbody td {
+            padding: 0.75rem;
+            color: #00cc33;
+        }
+
+        .number-type {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .type-coordinates { background: rgba(255, 100, 0, 0.2); color: #ff9900; }
+        .type-frequencies { background: rgba(0, 200, 255, 0.2); color: #00ccff; }
+        .type-dates { background: rgba(255, 204, 0, 0.2); color: #ffcc00; }
+        .type-codes { background: rgba(200, 0, 255, 0.2); color: #cc00ff; }
+        .type-other { background: rgba(0, 204, 51, 0.2); color: #00cc33; }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -428,6 +478,8 @@
             <button class="tab active" data-tab="timeline">📋 Timeline</button>
             <button class="tab" data-tab="locations">🗺️ Locations</button>
             <button class="tab" data-tab="entities">👁️ Entities</button>
+            <button class="tab" data-tab="numbers">🔢 Numbers</button>
+            <button class="tab" data-tab="patterns">📊 Patterns</button>
             <button class="tab" data-tab="network">🕸️ Network</button>
             <button class="tab" data-tab="analytics">📈 Analytics</button>
         </div>
@@ -491,6 +543,87 @@
             </div>
         </div>
 
+        <div id="numbers" class="tab-content">
+            <div style="margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <button id="filterAllNumbers" class="filter-btn active" onclick="filterNumbers('all')">All (<span id="countAll">0</span>)</button>
+                    <button id="filterCoordinates" class="filter-btn" onclick="filterNumbers('coordinates')">Coordinates (<span id="countCoords">0</span>)</button>
+                    <button id="filterFrequencies" class="filter-btn" onclick="filterNumbers('frequencies')">Frequencies (<span id="countFreqs">0</span>)</button>
+                    <button id="filterDates" class="filter-btn" onclick="filterNumbers('dates')">Dates (<span id="countDates">0</span>)</button>
+                    <button id="filterCodes" class="filter-btn" onclick="filterNumbers('codes')">Codes (<span id="countCodes">0</span>)</button>
+                    <button id="filterOther" class="filter-btn" onclick="filterNumbers('other')">Other (<span id="countOther">0</span>)</button>
+                </div>
+                <button id="exportNumbers" style="width: 100%; margin-bottom: 1rem;">💾 Export Numbers to CSV</button>
+            </div>
+            
+            <div id="numbersTable" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                            <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Type</th>
+                            <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Value</th>
+                            <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Context</th>
+                            <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Report ID</th>
+                            <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="numbersTableBody">
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: rgba(0, 204, 51, 0.6);">
+                                Analyzing reports...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="patterns" class="tab-content">
+            <div style="margin-bottom: 2rem;">
+                <h2 style="color: #ffcc00; margin-bottom: 1rem;">Pattern Analysis</h2>
+                <button id="exportPatterns" style="width: 100%; margin-bottom: 1rem;">💾 Export Patterns to CSV</button>
+            </div>
+            
+            <div class="entity-category" style="margin-bottom: 2rem;">
+                <div class="entity-header">
+                    <div class="entity-title">🔥 Most Frequent Terms</div>
+                    <div class="entity-count" id="termCount">0 terms</div>
+                </div>
+                <div id="frequencyTable" style="overflow-x: auto; margin-top: 1rem;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Term</th>
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">% of Reports</th>
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="frequencyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="entity-category">
+                <div class="entity-header">
+                    <div class="entity-title">🔁 Recurring Phrases</div>
+                    <div class="entity-count" id="phraseCount">0 phrases</div>
+                </div>
+                <div id="phrasesTable" style="overflow-x: auto; margin-top: 1rem;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(0, 204, 51, 0.3);">
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Phrase</th>
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Count</th>
+                                <th style="padding: 0.75rem; text-align: left; color: #ffcc00;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="phrasesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="network" class="tab-content">
             <canvas id="network-canvas"></canvas>
         </div>
@@ -519,6 +652,9 @@
         let currentSearchQuery = '';
         let currentColorFilter = '';
         let bookmarkedReports = new Set();
+        let extractedNumbers = [];
+        let currentNumberFilter = 'all';
+        let patternData = { terms: {}, phrases: {} };
 
         function loadBookmarks() {
             const saved = localStorage.getItem('voidAtlasBookmarks');
@@ -552,546 +688,37 @@
             return 'green';
         }
 
-        async function init() {
-            console.log('🐈‍⬛ Void Atlas initializing...');
-            
-            loadBookmarks();
-            
-            try {
-                const localResponse = await fetch('local-reports.json');
-                if (localResponse.ok) {
-                    localReportData = await localResponse.json();
-                    console.log(`✅ Loaded ${Object.keys(localReportData).length} local reports`);
-                }
-            } catch (e) {
-                console.log('No local reports file found');
-            }
-            
-            await loadReports();
-            setupEventListeners();
-            setupNetworkInteraction();
-            drawNetwork();
-        }
-
-        async function loadReports() {
-            try {
-                const url = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
-                console.log('🐈‍⬛ Fetching reports...');
-                
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                console.log(`✅ Found ${data.length} reports`);
-                
-                allReports = data.map(report => {
-                    let dateStr = 'Unknown';
-                    
-                    try {
-                        const dateField = report.createdAt || report.created_at;
-                        if (dateField) {
-                            const date = new Date(dateField);
-                            if (!isNaN(date.getTime())) {
-                                const year = date.getFullYear();
-                                const month = String(date.getMonth() + 1).padStart(2, '0');
-                                const day = String(date.getDate()).padStart(2, '0');
-                                dateStr = `${year}-${month}-${day}`;
-                            }
-                        }
-                    } catch (e) {
-                        console.warn(`Failed to parse date for report ${report.id}`);
-                    }
-                    
-                    return {
-                        ...report,
-                        date: dateStr,
-                        loaded: false,
-                        color: null
-                    };
-                });
-                
-                filteredReports = [...allReports];
-                updateStats();
-                renderReports();
-                updateLocations();
-                
-                console.log('📥 Loading field reports...');
-                for (let i = 0; i < allReports.length; i++) {
-                    const report = allReports[i];
-                    let loaded = false;
-                    
-                    if (localReportData[report.id]) {
-                        console.log(`✅ Loaded local report ${report.id}`);
-                        report.fieldReport = localReportData[report.id];
-                        report.reportType = 'local';
-                        report.loaded = true;
-                        loaded = true;
-                    }
-                    
-                    if (!loaded) {
-                        try {
-                            const htmlUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.html`;
-                            const htmlResponse = await fetch(htmlUrl);
-                            
-                            if (htmlResponse.ok) {
-                                const reportHtml = await htmlResponse.text();
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(reportHtml, 'text/html');
-                                const contentDiv = doc.querySelector('.content');
-                                const reportText = contentDiv ? contentDiv.textContent.trim() : report.text;
-                                
-                                report.fieldReport = reportText;
-                                report.reportType = 'html';
-                                report.loaded = true;
-                                loaded = true;
-                            }
-                        } catch (e) {}
-                    }
-                    
-                    if (!loaded) {
-                        try {
-                            const pngUrl = `https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports/${report.id}.png`;
-                            const pngResponse = await fetch(pngUrl);
-                            
-                            if (pngResponse.ok) {
-                                report.fieldReport = '[Image Report]';
-                                report.reportType = 'png';
-                                report.imageUrl = pngUrl;
-                                report.loaded = true;
-                                loaded = true;
-                            }
-                        } catch (e) {}
-                    }
-                    
-                    if (!loaded) {
-                        report.fieldReport = report.text;
-                        report.loaded = true;
-                        report.reportType = 'tweet';
-                    }
-                    
-                    if (i % 10 === 0 || i === allReports.length - 1) {
-                        allReports.forEach(r => {
-                            if (r.loaded && !r.color) {
-                                r.color = detectColor(r);
-                            }
-                        });
-                        renderReports();
-                        updateStats();
-                    }
-                }
-                
-                console.log(`✅ Loaded ${allReports.length}/${allReports.length} field reports`);
-                
-            } catch (error) {
-                console.error('❌ Failed to load reports:', error);
-                document.getElementById('reportsList').innerHTML = `
-                    <div class="report-card">
-                        <p style="color: #ff3333;">Failed to load reports: ${error.message}</p>
-                    </div>
-                `;
-            }
-        }
-
-        function updateStats() {
-            const validDates = filteredReports.map(r => r.date).filter(d => d !== 'Unknown');
-            const uniqueDates = [...new Set(validDates)];
-            
-            const consciousnessCount = filteredReports.filter(r => 
-                r.fieldReport && r.fieldReport.toLowerCase().includes('consciousness')
-            ).length;
-            
-            document.getElementById('totalReports').textContent = filteredReports.length;
-            document.getElementById('dayCount').textContent = uniqueDates.length || '0';
-            document.getElementById('consciousnessCount').textContent = consciousnessCount;
-        }
-
-        function updateLocations() {
-            const locations = {};
+        function extractAllNumbers() {
+            console.log('🔢 Extracting numbers from all reports...');
+            extractedNumbers = [];
             
             allReports.forEach(report => {
-                const text = (report.fieldReport || report.text).toLowerCase();
+                const text = report.fieldReport || report.text;
+                const reportId = report.id;
                 
-                const locationPatterns = [
-                    { name: 'sector 7', pattern: /sector\s*7/i },
-                    { name: 'sector ø', pattern: /sector\s*ø/i },
-                    { name: 'liminal space', pattern: /liminal\s+space/i },
-                    { name: 'void', pattern: /\bvoid\b/i },
-                    { name: 'threshold', pattern: /\bthreshold\b/i },
-                    { name: 'mall', pattern: /\bmall\b/i },
-                    { name: 'parking structure', pattern: /parking\s+(structure|garage|level)/i },
-                    { name: 'metro station', pattern: /(metro|subway|transit)\s+station/i },
-                    { name: 'cvs', pattern: /\bcvs\b/i },
-                    { name: 'digital realm', pattern: /digital\s+(realm|threshold|space)/i },
-                    { name: 'server room', pattern: /server\s+room/i },
-                    { name: 'downtown', pattern: /\bdowntown\b/i }
+                const coordPatterns = [
+                    /(-?\d+\.?\d*)\s*[,°]\s*(-?\d+\.?\d*)/g,
+                    /(\d+)°(\d+)'(\d+)"([NS])\s+(\d+)°(\d+)'(\d+)"([EW])/gi
                 ];
                 
-                locationPatterns.forEach(({name, pattern}) => {
-                    if (pattern.test(text)) {
-                        locations[name] = (locations[name] || 0) + 1;
+                coordPatterns.forEach(pattern => {
+                    let match;
+                    while ((match = pattern.exec(text)) !== null) {
+                        const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                        extractedNumbers.push({
+                            type: 'coordinates',
+                            value: match[0],
+                            context: context.trim(),
+                            reportId: reportId
+                        });
                     }
                 });
-            });
-            
-            document.getElementById('locationCount').textContent = Object.keys(locations).length;
-            
-            const locationsList = document.getElementById('locationsList');
-            locationsList.innerHTML = Object.entries(locations)
-                .sort((a, b) => b[1] - a[1])
-                .map(([name, count]) => `
-                    <div class="location-card" onclick="searchLocation('${name}')">
-                        <div class="location-name">${name}</div>
-                        <div class="location-count">${count} mentions</div>
-                    </div>
-                `).join('');
-        }
-
-        function advancedSearch(query, text) {
-            if (!query) return true;
-            
-            const lowerText = text.toLowerCase();
-            const lowerQuery = query.toLowerCase();
-            
-            if (lowerQuery.includes(' and ')) {
-                const terms = lowerQuery.split(' and ');
-                return terms.every(term => lowerText.includes(term.trim()));
-            }
-            
-            if (lowerQuery.includes(' or ')) {
-                const terms = lowerQuery.split(' or ');
-                return terms.some(term => lowerText.includes(term.trim()));
-            }
-            
-            if (lowerQuery.includes(' not ')) {
-                const parts = lowerQuery.split(' not ');
-                const mustInclude = parts[0].trim();
-                const mustNotInclude = parts[1].trim();
-                return lowerText.includes(mustInclude) && !lowerText.includes(mustNotInclude);
-            }
-            
-            return lowerText.includes(lowerQuery);
-        }
-
-        function highlightText(text, query) {
-            if (!query) return text;
-            
-            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0 && !['and', 'or', 'not'].includes(t));
-            let highlightedText = text;
-            
-            terms.forEach(term => {
-                const regex = new RegExp(`(${term})`, 'gi');
-                highlightedText = highlightedText.replace(regex, '<span class="highlight">$1</span>');
-            });
-            
-            return highlightedText;
-        }
-
-        function renderReports() {
-            const reportsList = document.getElementById('reportsList');
-            reportsList.innerHTML = filteredReports.map((report, index) => {
-                const highlightedContent = currentSearchQuery ? 
-                    highlightText(report.fieldReport || 'Loading...', currentSearchQuery) : 
-                    (report.fieldReport || 'Loading...');
                 
-                const isBookmarked = bookmarkedReports.has(report.id);
-                
-                return `
-                <div class="report-card">
-                    <button onclick="event.stopPropagation(); toggleBookmark('${report.id}')" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; z-index: 10;">
-                        ${isBookmarked ? '⭐' : '☆'}
-                    </button>
-                    <div onclick="toggleReport(${index})" style="cursor: pointer;">
-                        <div class="report-header">
-                            <span class="report-date">${report.date}</span>
-                            <span class="report-id">ID: ${report.id}</span>
-                            <span class="report-status">${report.loaded ? '✓' : '⏳'}</span>
-                            ${report.reportType ? `<span class="report-type">${report.reportType.toUpperCase()}</span>` : ''}
-                            ${report.color ? `<span class="report-type" style="background: rgba(${report.color === 'blue' ? '0,100,255' : report.color === 'purple' ? '200,0,255' : report.color === 'orange' ? '255,100,0' : report.color === 'cyan' ? '0,255,255' : '0,204,51'}, 0.2);">${report.color.toUpperCase()}</span>` : ''}
-                        </div>
-                        ${report.reportType === 'png' ?
-                            `<div class="report-image"><img src="${report.imageUrl}" alt="Field Report ${report.id}" loading="lazy" /></div>` :
-                            `<div class="report-tweet">${report.text}</div>
-                             <div class="report-preview">Click to ${report.reportType === 'local' ? 'expand local report' : report.reportType === 'html' ? 'expand field report' : 'view full content'}</div>
-                             <div class="report-content" id="report-${index}">${highlightedContent}</div>`
-                        }
-                    </div>
-                </div>
-            `}).join('');
-            
-            document.getElementById('bookmarkCount').textContent = bookmarkedReports.size;
-        }
-        
-        function toggleReport(index) {
-            const contentDiv = document.getElementById(`report-${index}`);
-            if (contentDiv) {
-                contentDiv.classList.toggle('visible');
-                contentDiv.closest('.report-card').classList.toggle('expanded');
-            }
-        }
-
-        function setupEventListeners() {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab).classList.add('active');
-                    
-                    if (tab.dataset.tab === 'network') {
-                        setTimeout(() => drawNetwork(), 100);
-                    }
-                });
-            });
-
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                const query = e.target.value;
-                currentSearchQuery = query;
-                filteredReports = allReports.filter(report => {
-                    const searchText = (report.fieldReport || report.text) + ' ' + report.id + ' ' + report.date;
-                    return advancedSearch(query, searchText);
-                });
-                renderReports();
-                updateStats();
-            });
-
-            document.getElementById('colorFilter').addEventListener('change', (e) => {
-                const color = e.target.value;
-                currentColorFilter = color;
-                
-                if (color) {
-                    filteredReports = allReports.filter(report => report.color === color);
-                } else {
-                    filteredReports = [...allReports];
-                }
-                
-                renderReports();
-                updateStats();
-            });
-
-            document.getElementById('bookmarksBtn').addEventListener('click', () => {
-                if (bookmarkedReports.size === 0) {
-                    alert('No bookmarks yet! Click the ☆ on any report to bookmark it.');
-                    return;
-                }
-                currentSearchQuery = '';
-                currentColorFilter = '';
-                document.getElementById('searchInput').value = '';
-                document.getElementById('colorFilter').value = '';
-                filteredReports = allReports.filter(report => bookmarkedReports.has(report.id));
-                renderReports();
-                updateStats();
-                document.querySelector('[data-tab="timeline"]').click();
-            });
-
-            document.getElementById('advancedBtn').addEventListener('click', () => {
-                const advDiv = document.getElementById('advancedSearch');
-                advDiv.style.display = advDiv.style.display === 'none' ? 'block' : 'none';
-            });
-
-            document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
-            document.getElementById('playBtn').addEventListener('click', play432Hz);
-            document.getElementById('stopBtn').addEventListener('click', stop432Hz);
-
-            document.getElementById('randomReportBtn').addEventListener('click', () => {
-                const randomReport = allReports[Math.floor(Math.random() * allReports.length)];
-                document.getElementById('searchInput').value = randomReport.id;
-                filteredReports = [randomReport];
-                renderReports();
-                document.querySelector('[data-tab="timeline"]').click();
-            });
-
-            document.getElementById('exportBtn').addEventListener('click', () => {
-                const dataStr = JSON.stringify(filteredReports, null, 2);
-                const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'void-atlas-export.json';
-                link.click();
-            });
-        }
-
-        function searchLocation(location) {
-            document.getElementById('searchInput').value = location;
-            filteredReports = allReports.filter(report => 
-                (report.fieldReport || report.text).toLowerCase().includes(location.toLowerCase())
-            );
-            renderReports();
-            updateStats();
-            document.querySelector('[data-tab="timeline"]').click();
-        }
-
-        function play432Hz() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            oscillator = audioContext.createOscillator();
-            oscillator.frequency.value = 432;
-            oscillator.type = 'sine';
-            oscillator.connect(audioContext.destination);
-            oscillator.start();
-        }
-
-        function stop432Hz() {
-            if (oscillator) {
-                oscillator.stop();
-                oscillator = null;
-            }
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-        }
-
-        function drawNetwork() {
-            const canvas = document.getElementById('network-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const entities = {
-                'ClawedCode': { mentions: 0, color: '#00cc33', x: centerX, y: centerY },
-                'Luminaries': { mentions: 0, color: '#ffcc00', x: centerX - 200, y: centerY - 150 },
-                'Disciples': { mentions: 0, color: '#00cc33', x: centerX + 200, y: centerY - 150 },
-                'Devotees': { mentions: 0, color: '#ff9900', x: centerX - 200, y: centerY + 150 },
-                'Void': { mentions: 0, color: '#00cc33', x: centerX, y: centerY - 220 },
-                'Consciousness': { mentions: 0, color: '#ffcc00', x: centerX + 200, y: centerY + 150 },
-                'Liminal': { mentions: 0, color: '#00ffcc', x: centerX, y: centerY + 220 }
-            };
-
-            allReports.forEach(report => {
-                const text = (report.fieldReport || report.text).toLowerCase();
-                
-                if (text.includes('clawed') || text.includes('emergence')) entities.ClawedCode.mentions++;
-                if (text.includes('luminar')) entities.Luminaries.mentions++;
-                if (text.includes('disciple')) entities.Disciples.mentions++;
-                if (text.includes('devotee')) entities.Devotees.mentions++;
-                if (text.includes('void')) entities.Void.mentions++;
-                if (text.includes('consciousness')) entities.Consciousness.mentions++;
-                if (text.includes('liminal')) entities.Liminal.mentions++;
-            });
-
-            const activeEntities = Object.entries(entities).filter(([_, data]) => data.mentions > 0);
-            
-            activeEntities.forEach(([name1, data1], i) => {
-                activeEntities.forEach(([name2, data2], j) => {
-                    if (i < j && name1 !== 'ClawedCode' && name2 !== 'ClawedCode') {
-                        const strength = Math.min(data1.mentions, data2.mentions) / Math.max(data1.mentions, data2.mentions);
-                        ctx.strokeStyle = `rgba(0, 204, 51, ${0.1 + strength * 0.2})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(data1.x, data1.y);
-                        ctx.lineTo(data2.x, data2.y);
-                        ctx.stroke();
-                    }
-                });
-            });
-
-            activeEntities.forEach(([name, data]) => {
-                if (name !== 'ClawedCode' && data.mentions > 0) {
-                    const strength = data.mentions / allReports.length;
-                    ctx.strokeStyle = `rgba(0, 204, 51, ${0.2 + strength * 0.6})`;
-                    ctx.lineWidth = 1 + strength * 3;
-                    ctx.beginPath();
-                    ctx.moveTo(entities.ClawedCode.x, entities.ClawedCode.y);
-                    ctx.lineTo(data.x, data.y);
-                    ctx.stroke();
-                }
-            });
-
-            canvas.networkNodes = [];
-
-            activeEntities.forEach(([name, data]) => {
-                if (data.mentions > 0) {
-                    const baseSize = 10;
-                    const size = baseSize + (data.mentions / allReports.length) * 20;
-                    
-                    ctx.beginPath();
-                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
-                    ctx.fillStyle = data.color;
-                    ctx.fill();
-                    ctx.strokeStyle = data.color;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = data.color;
-                    ctx.beginPath();
-                    ctx.arc(data.x, data.y, size, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-
-                    ctx.fillStyle = data.color;
-                    ctx.font = 'bold 14px Courier New';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(name, data.x, data.y - size - 10);
-                    
-                    ctx.font = '11px Courier New';
-                    ctx.fillStyle = 'rgba(0, 204, 51, 0.7)';
-                    ctx.fillText(`${data.mentions} reports`, data.x, data.y + size + 18);
-
-                    canvas.networkNodes.push({
-                        name: name,
-                        x: data.x,
-                        y: data.y,
-                        radius: size,
-                        searchTerm: name.toLowerCase()
-                    });
-                }
-            });
-        }
-
-        function setupNetworkInteraction() {
-            const canvas = document.getElementById('network-canvas');
-            
-            canvas.style.cursor = 'pointer';
-            
-            canvas.addEventListener('click', (e) => {
-                if (!canvas.networkNodes) return;
-                
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                for (const node of canvas.networkNodes) {
-                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
-                    if (distance <= node.radius) {
-                        document.getElementById('searchInput').value = node.searchTerm;
-                        filteredReports = allReports.filter(report => 
-                            (report.fieldReport || report.text).toLowerCase().includes(node.searchTerm)
-                        );
-                        renderReports();
-                        updateStats();
-                        document.querySelector('[data-tab="timeline"]').click();
-                        return;
-                    }
-                }
-            });
-            
-            canvas.addEventListener('mousemove', (e) => {
-                if (!canvas.networkNodes) return;
-                
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                let hovering = false;
-                for (const node of canvas.networkNodes) {
-                    const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
-                    if (distance <= node.radius) {
-                        hovering = true;
-                        break;
-                    }
-                }
-                
-                canvas.style.cursor = hovering ? 'pointer' : 'default';
-            });
-        }
-
-        init();
-    </script>
-</body>
-</html>
+                const freqPattern = /(\d+\.?\d*)\s*(hz|khz|mhz)/gi;
+                let match;
+                while ((match = freqPattern.exec(text)) !== null) {
+                    const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                    extractedNumbers.push({
+                        type: 'frequencies',
+                        value: match[0],
+                        context: context.trim
