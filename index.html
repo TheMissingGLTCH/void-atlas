@@ -639,8 +639,8 @@
         function updateLocations() {
             const locations = {};
             
-            // Use filteredReports instead of allReports
-            filteredReports.forEach(report => {
+            // Use ALL reports, not filtered ones
+            allReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
                 const patterns = ['sector', 'liminal', 'void', 'threshold', 'dimension', 'layer', 'station', 'zone', 'nexus', 'junction'];
                 
