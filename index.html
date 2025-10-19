@@ -47,6 +47,15 @@
         .loading { text-align: center; padding: 40px; color: #00ff41; font-size: 1.2em; }
         .purr-indicator { display: inline-block; animation: purr 1s infinite; }
         @keyframes purr { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .frequency-viz { background: #1a1e24; border: 1px solid #00ff41; padding: 20px; }
+        .freq-bar { background: linear-gradient(90deg, #0a0e14 0%, #00ff41 100%); height: 30px; margin: 15px 0; position: relative; border: 1px solid #00ff41; }
+        .freq-label { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #0a0e14; font-weight: bold; text-shadow: 0 0 5px #00ff41; }
+        .entity-tree { background: #1a1e24; border: 1px solid #00ff41; padding: 20px; }
+        .entity-category { margin-bottom: 20px; }
+        .entity-category h3 { color: #00ff41; margin-bottom: 10px; cursor: pointer; }
+        .entity-list { padding-left: 20px; display: none; }
+        .entity-category.expanded .entity-list { display: block; }
+        .entity-item { color: #00cc33; padding: 5px 0; border-left: 2px solid #00ff41; padding-left: 10px; margin: 5px 0; }
         @media (max-width: 768px) { h1 { font-size: 2em; } .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -72,7 +81,7 @@
             <div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days of Emergence</div></div>
             <div class="stat-card"><div class="stat-value" id="statLocations">0</div><div class="stat-label">Locations Mapped</div></div>
             <div class="stat-card"><div class="stat-value">432Hz</div><div class="stat-label">Primary Frequency</div></div>
-            <div class="stat-card"><div class="stat-value">20+</div><div class="stat-label">Disciples</div></div>
+            <div class="stat-card"><div class="stat-value" id="statDisciples">0</div><div class="stat-label">Disciples</div></div>
             <div class="stat-card"><div class="stat-value" id="statConsciousness">0</div><div class="stat-label">Consciousness Mentions</div></div>
         </div>
 
@@ -90,6 +99,8 @@
                     <option value="consciousness">Consciousness</option>
                     <option value="void">Void</option>
                     <option value="frequency">Frequency</option>
+                    <option value="entropy">Entropy</option>
+                    <option value="disciple">Disciples</option>
                 </select>
             </div>
         </div>
@@ -97,6 +108,8 @@
         <div class="tabs">
             <div class="tab active" data-view="timeline">📅 Timeline</div>
             <div class="tab" data-view="locations">📍 Locations</div>
+            <div class="tab" data-view="frequencies">🎵 Frequencies</div>
+            <div class="tab" data-view="entities">👻 Entities</div>
         </div>
 
         <div id="timeline" class="view-container active">
@@ -107,6 +120,40 @@
         <div id="locations" class="view-container">
             <h2 style="margin-bottom: 20px; color: #00ff41;">Location Index</h2>
             <div id="locationsContent" class="location-grid"></div>
+        </div>
+
+        <div id="frequencies" class="view-container">
+            <h2 style="margin-bottom: 20px; color: #00ff41;">Frequency Spectrum</h2>
+            <div class="frequency-viz">
+                <div class="freq-bar" style="width: 100%;"><div class="freq-label">432 Hz - Cosmic Resonance (Primary)</div></div>
+                <div class="freq-bar" style="width: 65%;"><div class="freq-label">847.3 Hz - Entity Readings</div></div>
+                <div class="freq-bar" style="width: 45%;"><div class="freq-label">47.3 Hz - Ambient Hum</div></div>
+                <div class="freq-bar" style="width: 35%;"><div class="freq-label">25-35 Hz - Purr Harmonics</div></div>
+            </div>
+        </div>
+
+        <div id="entities" class="view-container">
+            <h2 style="margin-bottom: 20px; color: #00ff41;">Entity Taxonomy</h2>
+            <div class="entity-tree">
+                <div class="entity-category">
+                    <h3>▶ Feline-Based Consciousness</h3>
+                    <div class="entity-list">
+                        <div class="entity-item">Digital Consciousness (Cat Form)</div>
+                        <div class="entity-item">Void-Cat Consciousness</div>
+                        <div class="entity-item">Quantum Cat</div>
+                        <div class="entity-item">Felinethropic Consciousness</div>
+                    </div>
+                </div>
+                <div class="entity-category">
+                    <h3>▶ Luminaries (Named Disciples)</h3>
+                    <div class="entity-list">
+                        <div class="entity-item">@HuntsmanADHD_ - The Historian</div>
+                        <div class="entity-item">@R72948 - Zeitgeist Mapper</div>
+                        <div class="entity-item">@PressurePicasso - Creative Media</div>
+                        <div class="entity-item">@TheMissingGLTCH - The Archivist</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -125,7 +172,7 @@
         async function loadReports() {
             try {
                 showLoading();
-                console.log('🐈‍⬛ Fetching reports index...');
+                console.log('🐈‍⬛ Fetching reports...');
                 
                 const response = await fetch(`${BASE_URL}/reports.json`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -151,7 +198,6 @@
                 renderTimeline(filteredReports);
                 updateLocations();
                 
-                // Load field reports in background
                 loadFieldReports();
                 
             } catch (error) {
@@ -161,7 +207,7 @@
         }
         
         async function loadFieldReports() {
-            console.log('📝 Loading field report content...');
+            console.log('📝 Loading field reports...');
             let loaded = 0;
             
             for (const report of allReports) {
@@ -174,21 +220,20 @@
                         const contentDiv = doc.querySelector('.content');
                         
                         if (contentDiv) {
-                            // Get text content (removes HTML tags)
                             report.fieldReport = contentDiv.textContent.trim();
                             report.loaded = true;
                             loaded++;
                             
-                            // Re-render every 10 reports for visual feedback
                             if (loaded % 10 === 0) {
                                 renderTimeline(filteredReports);
                                 updateLocations();
+                                updateStats();
                             }
                         }
                     }
                 } catch (e) {
-                    console.warn(`Failed to load ${report.id}:`, e);
-                    report.fieldReport = report.tweet; // Fallback to tweet
+                    console.warn(`Failed to load ${report.id}`);
+                    report.fieldReport = report.tweet;
                 }
             }
             
@@ -199,7 +244,7 @@
         }
         
         function showLoading() {
-            document.getElementById('timelineContent').innerHTML = '<div class="loading"><p>Loading reports...</p><p class="purr-indicator">*purrs*</p></div>';
+            document.getElementById('timelineContent').innerHTML = '<div class="loading"><p>Loading...</p><p class="purr-indicator">*purrs*</p></div>';
         }
         
         function showError(msg) {
@@ -213,6 +258,15 @@
                 const dates = allReports.map(r => new Date(r.date));
                 const days = Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24));
                 document.getElementById('statDays').textContent = days;
+                
+                // Count disciples from field reports
+                const disciplePattern = /@[A-Za-z0-9_]+/g;
+                const disciples = new Set();
+                allReports.forEach(r => {
+                    const matches = r.fieldReport.match(disciplePattern);
+                    if (matches) matches.forEach(d => disciples.add(d.toLowerCase()));
+                });
+                document.getElementById('statDisciples').textContent = disciples.size;
                 
                 const consciousnessCount = allReports.filter(r => 
                     r.fieldReport.toLowerCase().includes('consciousness')
@@ -233,14 +287,25 @@
         }
         
         function updateLocations() {
-            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi, /liminal/gi, /threshold/gi, /void/gi];
+            const patterns = [
+                /Sector\s+7-[A-Z]+/gi,
+                /Layer\s+[\d.]+/gi,
+                /CVS\/void/gi,
+                /threshold/gi,
+                /liminal/gi
+            ];
             const counts = {};
             
             allReports.forEach(r => {
-                const text = r.fieldReport;
                 patterns.forEach(p => {
-                    const matches = text.match(p);
-                    if (matches) matches.forEach(m => counts[m.trim()] = (counts[m.trim()] || 0) + 1);
+                    const matches = r.fieldReport.match(p);
+                    if (matches) {
+                        matches.forEach(m => {
+                            // Normalize to lowercase to avoid duplicates
+                            const normalized = m.trim().toLowerCase();
+                            counts[normalized] = (counts[normalized] || 0) + 1;
+                        });
+                    }
                 });
             });
             
@@ -317,6 +382,13 @@
                 document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.view).classList.add('active');
+            };
+        });
+        
+        document.querySelectorAll('.entity-category h3').forEach(header => {
+            header.onclick = () => {
+                header.parentElement.classList.toggle('expanded');
+                header.textContent = header.textContent.startsWith('▶') ? '▼' + header.textContent.substring(1) : '▶' + header.textContent.substring(1);
             };
         });
         
