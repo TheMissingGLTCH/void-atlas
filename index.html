@@ -412,24 +412,9 @@
         </div>
 
         <div id="frequencies" class="tab-content">
-            <div class="frequency-spectrum">
+            <div class="frequency-spectrum" id="frequencySpectrum">
                 <h2 style="margin-bottom: 1.5rem; color: #ffcc00;">Frequency Spectrum Analysis</h2>
-                <div class="frequency-bar">
-                    <div class="freq-label">432 Hz</div>
-                    <div class="freq-visual" style="width: 100%;"></div>
-                </div>
-                <div class="frequency-bar">
-                    <div class="freq-label">440 Hz</div>
-                    <div class="freq-visual" style="width: 85%;"></div>
-                </div>
-                <div class="frequency-bar">
-                    <div class="freq-label">528 Hz</div>
-                    <div class="freq-visual" style="width: 70%;"></div>
-                </div>
-                <div class="frequency-bar">
-                    <div class="freq-label">396 Hz</div>
-                    <div class="freq-visual" style="width: 55%;"></div>
-                </div>
+                <div id="frequencyBars"></div>
             </div>
         </div>
 
@@ -624,14 +609,15 @@
         }
 
         function updateStats() {
-            const validDates = allReports.map(r => r.date).filter(d => d !== 'Unknown');
+            // Use filteredReports for dynamic stats
+            const validDates = filteredReports.map(r => r.date).filter(d => d !== 'Unknown');
             const uniqueDates = [...new Set(validDates)];
             
-            const consciousnessCount = allReports.filter(r => 
+            const consciousnessCount = filteredReports.filter(r => 
                 r.fieldReport && r.fieldReport.toLowerCase().includes('consciousness')
             ).length;
             
-            document.getElementById('totalReports').textContent = allReports.length;
+            document.getElementById('totalReports').textContent = filteredReports.length;
             document.getElementById('dayCount').textContent = uniqueDates.length || '0';
             document.getElementById('consciousnessCount').textContent = consciousnessCount;
         }
@@ -639,7 +625,8 @@
         function updateLocations() {
             const locations = {};
             
-            allReports.forEach(report => {
+            // Use filteredReports instead of allReports
+            filteredReports.forEach(report => {
                 const text = (report.fieldReport || report.text).toLowerCase();
                 const patterns = ['sector', 'liminal', 'void', 'threshold', 'dimension', 'layer', 'station', 'zone', 'nexus', 'junction'];
                 
@@ -661,6 +648,45 @@
                         <div class="location-count">${count} mentions</div>
                     </div>
                 `).join('');
+        }
+
+        function updateFrequencies() {
+            const frequencies = {
+                '432 Hz': 0,
+                '440 Hz': 0,
+                '528 Hz': 0,
+                '396 Hz': 0,
+                '639 Hz': 0,
+                '741 Hz': 0,
+                '852 Hz': 0
+            };
+            
+            allReports.forEach(report => {
+                const text = (report.fieldReport || report.text).toLowerCase();
+                Object.keys(frequencies).forEach(freq => {
+                    const pattern = freq.toLowerCase().replace(' ', '');
+                    if (text.includes(pattern) || text.includes(freq.toLowerCase())) {
+                        frequencies[freq]++;
+                    }
+                });
+            });
+            
+            const maxCount = Math.max(...Object.values(frequencies), 1);
+            const frequencyBars = document.getElementById('frequencyBars');
+            
+            frequencyBars.innerHTML = Object.entries(frequencies)
+                .filter(([_, count]) => count > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([freq, count]) => {
+                    const percentage = (count / maxCount) * 100;
+                    return `
+                        <div class="frequency-bar">
+                            <div class="freq-label">${freq}</div>
+                            <div class="freq-visual" style="width: ${percentage}%;"></div>
+                            <div style="margin-left: 0.5rem; color: rgba(0, 204, 51, 0.8);">${count}</div>
+                        </div>
+                    `;
+                }).join('');
         }
 
         function renderReports() {
@@ -690,6 +716,11 @@
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     tab.classList.add('active');
                     document.getElementById(tab.dataset.tab).classList.add('active');
+                    
+                    // Redraw network when tab is opened
+                    if (tab.dataset.tab === 'network') {
+                        setTimeout(() => drawNetwork(), 100);
+                    }
                 });
             });
 
@@ -701,6 +732,8 @@
                     report.date.includes(query)
                 );
                 renderReports();
+                updateStats();
+                updateLocations();
             });
 
             document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
@@ -732,6 +765,8 @@
                 (report.fieldReport || report.text).toLowerCase().includes(location.toLowerCase())
             );
             renderReports();
+            updateStats();
+            updateLocations();
             document.querySelector('[data-tab="timeline"]').click();
         }
 
