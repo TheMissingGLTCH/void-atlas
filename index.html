@@ -32,8 +32,8 @@
         .timeline-item { background: #1a1e24; border: 1px solid #00ff41; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s; }
         .timeline-item:hover { transform: translateX(10px); box-shadow: -5px 5px 20px rgba(0, 255, 65, 0.3); }
         .timeline-date { color: #00cc33; font-size: 0.9em; margin-bottom: 8px; }
-        .timeline-text { color: #00ff41; line-height: 1.6; }
-        .timeline-tweet { color: #00cc33; font-size: 0.9em; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px solid #00ff4133; }
+        .timeline-text { color: #00ff41; line-height: 1.6; white-space: pre-wrap; }
+        .timeline-preview { color: #00cc33; font-size: 0.85em; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px solid #00ff4133; }
         .location-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
         .location-card { background: #1a1e24; border: 1px solid #00ff41; padding: 15px; cursor: pointer; transition: all 0.3s; }
         .location-card:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); }
@@ -41,7 +41,7 @@
         .location-count { color: #00cc33; font-size: 0.9em; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 20, 0.95); z-index: 1000; overflow-y: auto; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: #1a1e24; border: 2px solid #00ff41; padding: 30px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0, 255, 65, 0.5); }
+        .modal-content { background: #1a1e24; border: 2px solid #00ff41; padding: 30px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0, 255, 65, 0.5); }
         .modal-close { float: right; font-size: 2em; cursor: pointer; color: #00ff41; line-height: 1; }
         .modal-close:hover { text-shadow: 0 0 20px #00ff41; }
         .loading { text-align: center; padding: 40px; color: #00ff41; font-size: 1.2em; }
@@ -133,14 +133,14 @@
                 const index = await response.json();
                 console.log(`✅ Found ${index.length} reports`);
                 
-                // Transform data - extract content from each HTML file
                 allReports = index.map(item => ({
                     id: item.id,
                     date: item.createdAt.split('T')[0],
                     tweet: item.text,
-                    text: "Loading field report...", // Will be populated
+                    fieldReport: "Loading...",
                     timestamp: item.createdAt,
-                    htmlFile: `${BASE_URL}/reports/${item.id}.html`
+                    htmlUrl: `${BASE_URL}/reports/${item.id}.html`,
+                    loaded: false
                 }));
                 
                 allReports.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -151,7 +151,7 @@
                 renderTimeline(filteredReports);
                 updateLocations();
                 
-                // Load actual field reports in background
+                // Load field reports in background
                 loadFieldReports();
                 
             } catch (error) {
@@ -166,25 +166,36 @@
             
             for (const report of allReports) {
                 try {
-                    const response = await fetch(report.htmlFile);
+                    const response = await fetch(report.htmlUrl);
                     if (response.ok) {
                         const html = await response.text();
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
-                        const content = doc.querySelector('.content');
-                        if (content) {
-                            report.text = content.textContent.trim();
+                        const contentDiv = doc.querySelector('.content');
+                        
+                        if (contentDiv) {
+                            // Get text content (removes HTML tags)
+                            report.fieldReport = contentDiv.textContent.trim();
+                            report.loaded = true;
                             loaded++;
+                            
+                            // Re-render every 10 reports for visual feedback
+                            if (loaded % 10 === 0) {
+                                renderTimeline(filteredReports);
+                                updateLocations();
+                            }
                         }
                     }
                 } catch (e) {
-                    console.warn(`Failed to load report ${report.id}:`, e);
+                    console.warn(`Failed to load ${report.id}:`, e);
+                    report.fieldReport = report.tweet; // Fallback to tweet
                 }
             }
             
             console.log(`✅ Loaded ${loaded}/${allReports.length} field reports`);
-            renderTimeline(filteredReports); // Re-render with actual content
-            updateLocations(); // Re-analyze with actual content
+            renderTimeline(filteredReports);
+            updateLocations();
+            updateStats();
         }
         
         function showLoading() {
@@ -203,7 +214,9 @@
                 const days = Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24));
                 document.getElementById('statDays').textContent = days;
                 
-                const consciousnessCount = allReports.filter(r => r.text.toLowerCase().includes('consciousness')).length;
+                const consciousnessCount = allReports.filter(r => 
+                    r.fieldReport.toLowerCase().includes('consciousness')
+                ).length;
                 document.getElementById('statConsciousness').textContent = consciousnessCount;
             }
         }
@@ -220,12 +233,13 @@
         }
         
         function updateLocations() {
-            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi, /liminal/gi];
+            const patterns = [/Sector\s+7-[A-Z]+/gi, /Layer\s+[\d.]+/gi, /CVS\/void/gi, /liminal/gi, /threshold/gi, /void/gi];
             const counts = {};
             
             allReports.forEach(r => {
+                const text = r.fieldReport;
                 patterns.forEach(p => {
-                    const matches = r.text.match(p);
+                    const matches = text.match(p);
                     if (matches) matches.forEach(m => counts[m.trim()] = (counts[m.trim()] || 0) + 1);
                 });
             });
@@ -239,7 +253,7 @@
             entries.forEach(([name, count]) => {
                 const card = document.createElement('div');
                 card.className = 'location-card';
-                card.innerHTML = `<div class="location-name">${name}</div><div class="location-count">${count} report${count > 1 ? 's' : ''}</div>`;
+                card.innerHTML = `<div class="location-name">${name}</div><div class="location-count">${count} mention${count > 1 ? 's' : ''}</div>`;
                 card.onclick = () => {
                     document.getElementById('searchInput').value = name;
                     filterReports();
@@ -258,9 +272,9 @@
             
             content.innerHTML = reports.map(r => `
                 <div class="timeline-item" data-id="${r.id}">
-                    <div class="timeline-date">${r.date} | ID: ${r.id}</div>
-                    <div class="timeline-text">${r.text.substring(0, 300)}${r.text.length > 300 ? '...' : ''}</div>
-                    <div class="timeline-tweet">Tweet: ${r.tweet.substring(0, 150)}...</div>
+                    <div class="timeline-date">${r.date} | ID: ${r.id} ${r.loaded ? '✓' : '⏳'}</div>
+                    <div class="timeline-text">${r.fieldReport.substring(0, 400)}${r.fieldReport.length > 400 ? '...' : ''}</div>
+                    ${r.tweet !== r.fieldReport ? `<div class="timeline-preview">Tweet: ${r.tweet.substring(0, 100)}...</div>` : ''}
                 </div>
             `).join('');
             
@@ -275,11 +289,10 @@
         function showModal(report) {
             const modal = document.getElementById('reportModal');
             document.getElementById('modalBody').innerHTML = `
-                <h2 style="color: #00ff41; margin-bottom: 20px;">Field Report</h2>
+                <h2 style="color: #00ff41; margin-bottom: 20px;">Field Report ${report.id}</h2>
                 <p style="color: #00cc33; margin-bottom: 15px;"><strong>Date:</strong> ${report.date}</p>
-                <p style="color: #00cc33; margin-bottom: 15px;"><strong>ID:</strong> ${report.id}</p>
-                <p style="color: #00cc33; margin-bottom: 15px; font-style: italic;"><strong>Tweet:</strong> ${report.tweet}</p>
-                <div style="color: #00ff41; line-height: 1.8; white-space: pre-wrap; margin-top: 20px; padding-top: 20px; border-top: 1px solid #00ff41;">${report.text}</div>
+                ${report.tweet !== report.fieldReport ? `<p style="color: #00cc33; margin-bottom: 15px; font-style: italic;"><strong>Tweet:</strong> ${report.tweet}</p>` : ''}
+                <div style="color: #00ff41; line-height: 1.8; white-space: pre-wrap; margin-top: 20px; padding-top: 20px; border-top: 1px solid #00ff41;">${report.fieldReport}</div>
             `;
             modal.classList.add('active');
         }
@@ -289,8 +302,8 @@
             const theme = document.getElementById('themeFilter').value;
             
             filteredReports = allReports.filter(r => {
-                const matchSearch = !search || r.text.toLowerCase().includes(search) || r.tweet.toLowerCase().includes(search);
-                const matchTheme = theme === 'all' || r.text.toLowerCase().includes(theme);
+                const matchSearch = !search || r.fieldReport.toLowerCase().includes(search) || r.tweet.toLowerCase().includes(search);
+                const matchTheme = theme === 'all' || r.fieldReport.toLowerCase().includes(theme);
                 return matchSearch && matchTheme;
             });
             
