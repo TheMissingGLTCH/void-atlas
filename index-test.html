@@ -504,8 +504,9 @@
 
         async function loadReports() {
             try {
+                // ClawedCode reports are in a different repo
                 const url = 'https://raw.githubusercontent.com/ClawedCode/clawedcode.github.io/main/reports.json';
-                console.log('🐈‍⬛ Fetching reports...');
+                console.log('🐈‍⬛ Fetching reports from:', url);
                 
                 const response = await fetch(url);
                 
