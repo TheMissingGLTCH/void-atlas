@@ -399,14 +399,42 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
-                <input type="search" id="poemSearch" placeholder="Search poems by theme, metaphor, or cosmic whisper..." style="flex: 1;">
-                <span style="color: rgba(0, 204, 51, 0.7);" id="poemCount">0 transmissions</span>
+            <!-- Live Twitter Timeline -->
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+                <h3 style="color: #ffcc00; margin-bottom: 1rem; text-align: center;">📡 LIVE TRANSMISSIONS</h3>
+                <p style="color: rgba(0, 204, 51, 0.7); text-align: center; margin-bottom: 1rem; font-size: 0.9rem;">
+                    Real-time stream from the Dreamwright
+                </p>
+                <div style="display: flex; justify-content: center;">
+                    <a class="twitter-timeline" 
+                       data-width="600"
+                       data-height="600" 
+                       data-theme="dark"
+                       data-chrome="nofooter noborders"
+                       href="https://twitter.com/CatGPT8?ref_src=twsrc%5Etfw">
+                        Loading transmissions from @CatGPT8...
+                    </a>
+                </div>
+            </div>
+
+            <!-- Archived Poems -->
+            <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+                <h3 style="color: #ffcc00; margin-bottom: 1rem;">🗄️ ARCHIVED TRANSMISSIONS</h3>
+                <p style="color: rgba(0, 204, 51, 0.7); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Curated collection of preserved poems
+                </p>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <input type="search" id="poemSearch" placeholder="Search archived poems by theme, metaphor, or cosmic whisper..." style="flex: 1;">
+                    <span style="color: rgba(0, 204, 51, 0.7);" id="poemCount">0 transmissions</span>
+                </div>
             </div>
 
             <div id="poemsList"></div>
         </div>
     </div>
+
+    <!-- Twitter Widget Script -->
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
     <script>
         let allReports = [];
