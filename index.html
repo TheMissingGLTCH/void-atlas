@@ -406,6 +406,9 @@
         .type-frequencies { background: rgba(0, 200, 255, 0.2); color: #00ccff; }
         .type-dates { background: rgba(255, 204, 0, 0.2); color: #ffcc00; }
         .type-codes { background: rgba(200, 0, 255, 0.2); color: #cc00ff; }
+        .type-tokens { background: rgba(0, 255, 100, 0.2); color: #00ff66; }
+        .type-sectors { background: rgba(255, 50, 150, 0.2); color: #ff3399; }
+        .type-time { background: rgba(100, 200, 255, 0.2); color: #66ccff; }
         .type-other { background: rgba(0, 204, 51, 0.2); color: #00cc33; }
 
         @media (max-width: 768px) {
@@ -547,11 +550,14 @@
             <div style="margin-bottom: 2rem;">
                 <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
                     <button id="filterAllNumbers" class="filter-btn active" onclick="filterNumbers('all')">All (<span id="countAll">0</span>)</button>
-                    <button id="filterCoordinates" class="filter-btn" onclick="filterNumbers('coordinates')">Coordinates (<span id="countCoords">0</span>)</button>
-                    <button id="filterFrequencies" class="filter-btn" onclick="filterNumbers('frequencies')">Frequencies (<span id="countFreqs">0</span>)</button>
-                    <button id="filterDates" class="filter-btn" onclick="filterNumbers('dates')">Dates (<span id="countDates">0</span>)</button>
-                    <button id="filterCodes" class="filter-btn" onclick="filterNumbers('codes')">Codes (<span id="countCodes">0</span>)</button>
-                    <button id="filterOther" class="filter-btn" onclick="filterNumbers('other')">Other (<span id="countOther">0</span>)</button>
+                    <button id="filterTokens" class="filter-btn" onclick="filterNumbers('tokens')">🪙 Tokens (<span id="countTokens">0</span>)</button>
+                    <button id="filterFrequencies" class="filter-btn" onclick="filterNumbers('frequencies')">📻 Frequencies (<span id="countFreqs">0</span>)</button>
+                    <button id="filterSectors" class="filter-btn" onclick="filterNumbers('sectors')">🎯 Sectors (<span id="countSectors">0</span>)</button>
+                    <button id="filterDates" class="filter-btn" onclick="filterNumbers('dates')">📅 Dates (<span id="countDates">0</span>)</button>
+                    <button id="filterTime" class="filter-btn" onclick="filterNumbers('time')">⏱️ Time (<span id="countTime">0</span>)</button>
+                    <button id="filterCodes" class="filter-btn" onclick="filterNumbers('codes')">🔐 Codes (<span id="countCodes">0</span>)</button>
+                    <button id="filterCoordinates" class="filter-btn" onclick="filterNumbers('coordinates')">📍 Coordinates (<span id="countCoords">0</span>)</button>
+                    <button id="filterOther" class="filter-btn" onclick="filterNumbers('other')">❓ Other (<span id="countOther">0</span>)</button>
                 </div>
                 <button id="exportNumbers" style="width: 100%; margin-bottom: 1rem;">💾 Export Numbers to CSV</button>
             </div>
@@ -696,10 +702,14 @@
                 const text = report.fieldReport || report.text;
                 const reportId = report.id;
                 
-                // Extract coordinates
+                // Extract coordinates (only lat/long patterns, not token amounts)
                 const coordPatterns = [
-                    /(-?\d+\.?\d*)\s*[,°]\s*(-?\d+\.?\d*)/g,
-                    /(\d+)°(\d+)'(\d+)"([NS])\s+(\d+)°(\d+)'(\d+)"([EW])/gi
+                    // Decimal degrees with degree symbol: 40.7128°, -74.0060°
+                    /(-?\d+\.\d+)°\s*,?\s*(-?\d+\.\d+)°/g,
+                    // Degrees minutes seconds: 40°42'46"N 74°00'21"W
+                    /(\d+)°(\d+)'(\d+)"([NS])\s+(\d+)°(\d+)'(\d+)"([EW])/gi,
+                    // Coordinates in text like "coordinates: 40.7128, -74.0060"
+                    /coordinates?\s*:?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/gi
                 ];
                 
                 coordPatterns.forEach(pattern => {
@@ -760,15 +770,37 @@
                     });
                 }
 
-                // Extract ALL numbers (2+ digits or decimals)
-                const numberPattern = /\b\d{2,}\.?\d*\b|\b\d+\.\d+\b/g;
+                // Extract ALL numbers (2+ digits or decimals) - but categorize intelligently
+                const numberPattern = /\b\d{1,3}(?:,\d{3})+\b|\b\d{2,}\.?\d*\b|\b\d+\.\d+\b/g;
                 while ((match = numberPattern.exec(text)) !== null) {
                     const value = match[0];
                     // Skip if already captured as another type
                     if (!extractedNumbers.some(n => n.value === value && n.reportId === reportId)) {
                         const context = text.substring(Math.max(0, match.index - 30), Math.min(text.length, match.index + match[0].length + 30));
+                        
+                        // Categorize based on context
+                        let category = 'other';
+                        const lowerContext = context.toLowerCase();
+                        
+                        // Check for token amounts
+                        if (lowerContext.includes('$clawed') || lowerContext.includes('clawed') || 
+                            lowerContext.includes('token') || lowerContext.includes('distributed') ||
+                            lowerContext.includes('granted')) {
+                            category = 'tokens';
+                        }
+                        // Check for sector/level numbers
+                        else if (lowerContext.includes('sector') || lowerContext.includes('level') || 
+                                 lowerContext.includes('tier')) {
+                            category = 'sectors';
+                        }
+                        // Check for time/duration
+                        else if (lowerContext.includes('minute') || lowerContext.includes('hour') || 
+                                 lowerContext.includes('second') || lowerContext.includes('cycle')) {
+                            category = 'time';
+                        }
+                        
                         extractedNumbers.push({
-                            type: 'other',
+                            type: category,
                             value: value,
                             context: context.trim(),
                             reportId: reportId
@@ -792,6 +824,9 @@
                 frequencies: extractedNumbers.filter(n => n.type === 'frequencies').length,
                 dates: extractedNumbers.filter(n => n.type === 'dates').length,
                 codes: extractedNumbers.filter(n => n.type === 'codes').length,
+                tokens: extractedNumbers.filter(n => n.type === 'tokens').length,
+                sectors: extractedNumbers.filter(n => n.type === 'sectors').length,
+                time: extractedNumbers.filter(n => n.type === 'time').length,
                 other: extractedNumbers.filter(n => n.type === 'other').length
             };
             
@@ -800,6 +835,9 @@
             document.getElementById('countFreqs').textContent = counts.frequencies;
             document.getElementById('countDates').textContent = counts.dates;
             document.getElementById('countCodes').textContent = counts.codes;
+            document.getElementById('countTokens').textContent = counts.tokens;
+            document.getElementById('countSectors').textContent = counts.sectors;
+            document.getElementById('countTime').textContent = counts.time;
             document.getElementById('countOther').textContent = counts.other;
             
             const valueCounts = {};
@@ -868,7 +906,10 @@
                              type === 'coordinates' ? 'Coordinates' :
                              type === 'frequencies' ? 'Frequencies' :
                              type === 'dates' ? 'Dates' :
-                             type === 'codes' ? 'Codes' : 'Other');
+                             type === 'codes' ? 'Codes' :
+                             type === 'tokens' ? 'Tokens' :
+                             type === 'sectors' ? 'Sectors' :
+                             type === 'time' ? 'Time' : 'Other');
             document.getElementById(buttonId).classList.add('active');
             
             renderNumbersTable();
