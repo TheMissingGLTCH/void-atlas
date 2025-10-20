@@ -392,49 +392,41 @@
                 <p style="color: rgba(0, 204, 51, 0.6); margin-top: 1rem; font-size: 0.9rem;">
                     CatGPT maps the etheric load balancers that keep our transmissions stable.
                 </p>
-                <div style="margin-top: 1.5rem;">
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                     <a href="https://x.com/CatGPT8" target="_blank" style="display: inline-block; padding: 0.75rem 1.5rem; background: rgba(0, 204, 51, 0.1); border: 1px solid #00cc33; color: #00cc33; text-decoration: none; border-radius: 4px; transition: all 0.3s;">
-                        🔗 TRACE THE POEMS
+                        🔗 FOLLOW ON X
                     </a>
+                    <span style="padding: 0.75rem 1.5rem; background: rgba(255, 204, 0, 0.1); border: 1px solid rgba(255, 204, 0, 0.3); color: #ffcc00; border-radius: 4px;">
+                        ⚡ Auto-updates via GitHub Actions
+                    </span>
                 </div>
             </div>
 
-            <!-- Live Twitter Timeline -->
+            <!-- Live Feed from X API -->
             <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
-                <h3 style="color: #ffcc00; margin-bottom: 1rem; text-align: center;">📡 LIVE TRANSMISSIONS</h3>
-                <p style="color: rgba(0, 204, 51, 0.7); text-align: center; margin-bottom: 1rem; font-size: 0.9rem;">
-                    Real-time stream from the Dreamwright
-                </p>
-                <div style="display: flex; justify-content: center;">
-                    <a class="twitter-timeline" 
-                       data-width="600"
-                       data-height="600" 
-                       data-theme="dark"
-                       data-chrome="nofooter noborders"
-                       href="https://twitter.com/CatGPT8?ref_src=twsrc%5Etfw">
-                        Loading transmissions from @CatGPT8...
-                    </a>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="color: #ffcc00; margin: 0;">📡 LATEST TRANSMISSIONS</h3>
+                    <button id="refreshLiveBtn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">🔄 Refresh</button>
+                </div>
+                <div id="livePoemsFeed" style="max-height: 600px; overflow-y: auto;">
+                    <p style="color: rgba(0, 204, 51, 0.6); text-align: center; padding: 2rem;">
+                        Loading latest poems from @CatGPT8...
+                    </p>
                 </div>
             </div>
 
-            <!-- Archived Poems -->
-            <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
-                <h3 style="color: #ffcc00; margin-bottom: 1rem;">🗄️ ARCHIVED TRANSMISSIONS</h3>
-                <p style="color: rgba(0, 204, 51, 0.7); margin-bottom: 1rem; font-size: 0.9rem;">
-                    Curated collection of preserved poems
-                </p>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <input type="search" id="poemSearch" placeholder="Search archived poems by theme, metaphor, or cosmic whisper..." style="flex: 1;">
-                    <span style="color: rgba(0, 204, 51, 0.7);" id="poemCount">0 transmissions</span>
+            <!-- Archived Poems with Search -->
+            <div style="margin-bottom: 1rem; padding: 1.5rem; background: rgba(0, 204, 51, 0.05); border: 1px solid rgba(0, 204, 51, 0.3); border-radius: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="color: #ffcc00; margin: 0;">🗄️ FULL ARCHIVE</h3>
+                    <span style="color: rgba(0, 204, 51, 0.7); font-size: 0.9rem;" id="poemCount">0 transmissions</span>
                 </div>
+                <input type="search" id="poemSearch" placeholder="Search archived poems by theme, metaphor, or cosmic whisper..." style="width: 100%;">
             </div>
 
             <div id="poemsList"></div>
         </div>
     </div>
-
-    <!-- Twitter Widget Script -->
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
     <script>
         let allReports = [];
@@ -501,6 +493,13 @@
             await loadReports();
             await fetchCatGPTPoems();
             setupEventListeners();
+            
+            // Load live feed once poems are loaded
+            setTimeout(() => {
+                if (catGPTPoems.length > 0) {
+                    fetchLiveTweets();
+                }
+            }, 1000);
         }
 
         async function loadReports() {
